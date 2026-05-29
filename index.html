@@ -239,9 +239,151 @@ tbody tr.selected-row { background: rgba(255,85,51,0.06) !important; }
 .bulk-step-line.done { background:var(--green); }
 .bulk-row-err td:first-child { border-left:3px solid var(--red); }
 .bulk-row-err { background:rgba(255,68,68,0.04); }
+
+/* LOGIN PAGE */
+.login-page { position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center; }
+.login-card { width:420px;max-width:calc(100vw - 32px); }
+.login-logo { display:flex;align-items:center;gap:12px;margin-bottom:32px;justify-content:center; }
+.login-logo-icon { width:48px;height:48px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 8px 24px rgba(255,85,51,0.4); }
+.login-logo-text { font-size:22px;font-weight:600;letter-spacing:-0.5px; }
+.login-logo-sub { font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-top:2px; }
+.login-box { background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:32px;box-shadow:0 24px 64px rgba(0,0,0,0.5); }
+.login-title { font-size:18px;font-weight:600;margin-bottom:4px; }
+.login-sub { font-size:13px;color:var(--text3);margin-bottom:24px; }
+.login-group { margin-bottom:16px; }
+.login-group label { display:block;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;font-weight:500;margin-bottom:6px; }
+.login-group input { width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:11px 14px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.15s;box-sizing:border-box; }
+.login-group input:focus { border-color:var(--accent); }
+.login-group input::placeholder { color:var(--text3); }
+.login-btn { width:100%;padding:13px;background:var(--accent);border:none;border-radius:8px;color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.15s;margin-top:8px; }
+.login-btn:hover { background:var(--accent2); }
+.login-error { display:none;padding:10px 14px;background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.3);border-radius:8px;color:var(--red);font-size:12px;margin-bottom:14px; }
+.login-users { margin-top:22px;padding-top:20px;border-top:1px solid var(--border); }
+.login-users-title { font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;font-weight:500; }
+.login-user-chip { display:inline-flex;align-items:center;gap:6px;padding:5px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;font-size:11px;cursor:pointer;margin:3px;transition:all 0.1s;color:var(--text2); }
+.login-user-chip:hover { border-color:var(--accent);color:var(--text); }
+.pass-wrap { position:relative; }
+.pass-wrap input { padding-right:40px; }
+.pass-toggle { position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0;line-height:1; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
 </style>
 </head>
 <body>
+
+<!-- ═══ LOGIN / SIGNUP PAGE ═══ -->
+<div class="login-page" id="login-page">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">🔥</div>
+      <div>
+        <div class="login-logo-text">FireGuard</div>
+        <div class="login-logo-sub">Extinguisher Management</div>
+      </div>
+    </div>
+
+    <!-- Tab toggle -->
+    <div style="display:flex;gap:0;background:var(--bg3);border-radius:10px;padding:4px;margin-bottom:20px;">
+      <button id="tab-signin" onclick="switchAuthTab('signin')"
+        style="flex:1;padding:9px;border:none;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;background:var(--bg2);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.3);transition:all 0.15s;">
+        Sign In
+      </button>
+      <button id="tab-signup" onclick="switchAuthTab('signup')"
+        style="flex:1;padding:9px;border:none;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;background:transparent;color:var(--text3);transition:all 0.15s;">
+        Sign Up
+      </button>
+    </div>
+
+    <!-- ── SIGN IN PANEL ── -->
+    <div id="panel-signin">
+      <div class="login-box">
+        <div class="login-title">Welcome back</div>
+        <div class="login-sub">Sign in with your FireGuard account</div>
+        <div class="login-error" id="login-error"></div>
+        <div class="login-group">
+          <label>Email</label>
+          <input type="email" id="login-username" placeholder="you@company.com" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="email">
+        </div>
+        <div class="login-group">
+          <label>Password</label>
+          <div class="pass-wrap">
+            <input type="password" id="login-password" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="current-password">
+            <button class="pass-toggle" onclick="togglePassVis('login-password','pass-eye')" tabindex="-1" id="pass-eye">👁</button>
+          </div>
+        </div>
+        <button class="login-btn" onclick="doLogin()" id="signin-btn">Sign In →</button>
+        <div style="margin-top:14px;text-align:center;font-size:12px;color:var(--text3);">
+          No account? <span onclick="switchAuthTab('signup')" style="color:var(--accent);cursor:pointer;text-decoration:underline;">Request access →</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SIGN UP PANEL ── -->
+    <div id="panel-signup" style="display:none;">
+      <div class="login-box">
+        <div id="signup-form-wrap">
+          <div class="login-title">Request Access</div>
+          <div class="login-sub">Submit your details — an admin will approve your account</div>
+          <div class="login-error" id="signup-error"></div>
+          <div class="login-group">
+            <label>Full Name *</label>
+            <input type="text" id="signup-name" placeholder="Your full name" autocomplete="name">
+          </div>
+          <div class="login-group">
+            <label>Email *</label>
+            <input type="email" id="signup-email" placeholder="you@company.com" autocomplete="email">
+          </div>
+          <div class="login-group">
+            <label>Password *</label>
+            <div class="pass-wrap">
+              <input type="password" id="signup-password" placeholder="Min 8 characters">
+              <button class="pass-toggle" onclick="togglePassVis('signup-password','signup-eye')" tabindex="-1" id="signup-eye">👁</button>
+            </div>
+          </div>
+          <div class="login-group">
+            <label>Confirm Password *</label>
+            <input type="password" id="signup-confirm" placeholder="Re-enter password">
+          </div>
+          <div class="login-group">
+            <label>Role Requested</label>
+            <select id="signup-role" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:11px 14px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;">
+              <option value="viewer">Viewer — read-only access</option>
+              <option value="vendor">Vendor — vendor operations</option>
+              <option value="manager">Manager — site management</option>
+              <option value="admin">Admin — full access</option>
+            </select>
+          </div>
+          <div class="login-group">
+            <label>Organisation / Site</label>
+            <input type="text" id="signup-org" placeholder="Your site or department">
+          </div>
+          <button class="login-btn" onclick="doSignup()" id="signup-btn">Submit Request →</button>
+          <div style="margin-top:14px;text-align:center;font-size:12px;color:var(--text3);">
+            Already have an account? <span onclick="switchAuthTab('signin')" style="color:var(--accent);cursor:pointer;text-decoration:underline;">Sign in →</span>
+          </div>
+        </div>
+
+        <!-- Pending state shown after signup -->
+        <div id="signup-pending" style="display:none;text-align:center;padding:20px 0;">
+          <div style="font-size:48px;margin-bottom:16px;">⏳</div>
+          <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:8px;">Request submitted!</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:6px;" id="signup-pending-msg"></div>
+          <div style="font-size:12px;color:var(--text3);">You'll be able to sign in once an admin approves your account.</div>
+          <button onclick="switchAuthTab('signin')" class="login-btn" style="margin-top:20px;background:var(--bg3);color:var(--text);">← Back to Sign In</button>
+        </div>
+
+        <!-- Blocked state — signed up but not approved -->
+        <div id="signup-blocked" style="display:none;text-align:center;padding:20px 0;">
+          <div style="font-size:48px;margin-bottom:16px;">🔒</div>
+          <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:8px;">Awaiting Approval</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:16px;">Your account exists but hasn't been approved yet. Please contact an administrator.</div>
+          <button onclick="doLogout()" style="padding:10px 20px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;">Sign out</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <div class="app">
 
 <!-- SIDEBAR -->
@@ -302,6 +444,12 @@ tbody tr.selected-row { background: rgba(255,85,51,0.06) !important; }
         <div class="user-name">Admin User</div>
         <div class="user-role">System Admin</div>
       </div>
+    </div>
+    <div style="padding:0 8px 10px;">
+      <button onclick="doLogout()" class="btn ghost sm" style="width:100%;justify-content:center;color:var(--text3);font-size:12px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </button>
     </div>
   </div>
 </aside>
@@ -482,6 +630,7 @@ tbody tr.selected-row { background: rgba(255,85,51,0.06) !important; }
       <div id="as-select-bar" class="select-bar" style="display:none;">
         <span id="as-select-info"></span>
         <button class="btn ghost sm" onclick="clearAssetSelection()">Clear selection</button>
+        <button class="btn sm red" onclick="confirmDeleteSelected()" id="as-bulk-delete-btn" style="margin-left:auto;">🗑 Delete Selected</button>
       </div>
 
       <div class="card">
@@ -616,6 +765,10 @@ tbody tr.selected-row { background: rgba(255,85,51,0.06) !important; }
 
     <!-- ═══════════════ ADMIN PAGE ═══════════════ -->
     <div class="page" id="page-admin">
+
+      <!-- Pending User Approvals banner -->
+      <div id="admin-pending-banner" style="display:none;margin-bottom:16px;"></div>
+
       <div class="grid-2" style="gap:16px;">
         <div>
           <div class="section-title">Mark for Refill</div>
@@ -649,6 +802,15 @@ tbody tr.selected-row { background: rgba(255,85,51,0.06) !important; }
               <button class="btn green w-full" onclick="adminReturn()">Mark as Returned & Active</button>
             </div>
           </div>
+
+          <!-- User Approvals -->
+          <div class="section-title" style="margin-top:20px;">
+            User Access Requests
+            <span id="admin-pending-count" style="margin-left:8px;padding:2px 8px;background:rgba(255,68,68,0.15);color:var(--red);border-radius:20px;font-size:10px;"></span>
+          </div>
+          <div class="card" id="admin-pending-users">
+            <div class="card-body" style="color:var(--text3);font-size:12px;text-align:center;padding:20px;">Loading…</div>
+          </div>
         </div>
 
         <div>
@@ -661,6 +823,12 @@ tbody tr.selected-row { background: rgba(255,85,51,0.06) !important; }
           <div class="section-title" style="margin-top:20px;">Alert Summary</div>
           <div class="card">
             <div class="card-body" id="admin-alert-summary"></div>
+          </div>
+
+          <!-- Active Users -->
+          <div class="section-title" style="margin-top:20px;">Active Users</div>
+          <div class="card" id="admin-active-users">
+            <div class="card-body" style="color:var(--text3);font-size:12px;text-align:center;padding:20px;">Loading…</div>
           </div>
         </div>
       </div>
@@ -998,12 +1166,25 @@ tbody tr.selected-row { background: rgba(255,85,51,0.06) !important; }
       <!-- STEP B: Issue details -->
       <div id="issue-details-section">
         <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;font-weight:500;">Step 2 — Issue details</div>
+
+        <!-- Empty extinguisher toggle — prominent card -->
+        <div id="issue-empty-card" onclick="toggleEmptyFE()" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:rgba(245,166,35,0.07);border:2px solid rgba(245,166,35,0.2);border-radius:var(--r);margin-bottom:14px;cursor:pointer;transition:all 0.15s;">
+          <div style="position:relative;flex-shrink:0;">
+            <input type="checkbox" id="issue-empty-fe" onclick="event.stopPropagation();toggleEmptyFE()" style="width:18px;height:18px;accent-color:var(--amber);cursor:pointer;">
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;color:var(--amber);">🧯 Empty / Discharged Extinguisher</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px;">Check this if the extinguisher is empty or discharged — it will be <strong style="color:var(--amber);">sent directly to vendor for refilling</strong> instead of the normal issue queue.</div>
+          </div>
+        </div>
+
         <div class="form-grid">
           <div class="form-group full">
             <label>Issue Type</label>
             <select id="issue-type">
               <option>Missing Pin</option><option>Missing Hose</option><option>Missing Label</option>
               <option>Damaged Body</option><option>Pressure Low</option><option>Tampered Seal</option>
+              <option>Empty / Discharged</option>
               <option>Missing Extinguisher</option><option>Expired</option><option>Other</option>
             </select>
           </div>
@@ -1018,6 +1199,9 @@ tbody tr.selected-row { background: rgba(255,85,51,0.06) !important; }
               <div class="check-item"><input type="checkbox" id="c6"><label for="c6">Seal broken / tampered</label></div>
               <div class="check-item"><input type="checkbox" id="c7"><label for="c7">Bracket / mount missing</label></div>
               <div class="check-item"><input type="checkbox" id="c8"><label for="c8">Physically damaged</label></div>
+              <div class="check-item" style="background:rgba(245,166,35,0.07);border:1px solid rgba(245,166,35,0.2);">
+                <input type="checkbox" id="c9" onchange="syncEmptyCheckbox(this)"><label for="c9" style="color:var(--amber);font-weight:500;">Empty / Discharged</label>
+              </div>
             </div>
           </div>
           <div class="form-group full">
@@ -1035,12 +1219,32 @@ tbody tr.selected-row { background: rgba(255,85,51,0.06) !important; }
             </select>
           </div>
         </div>
+
+        <!-- Empty FE vendor form — revealed when checked -->
+        <div id="issue-empty-vendor-form" style="display:none;margin-top:14px;padding:14px 16px;background:rgba(245,166,35,0.07);border:1px solid rgba(245,166,35,0.25);border-radius:var(--r);">
+          <div style="font-size:11px;color:var(--amber);text-transform:uppercase;letter-spacing:0.7px;font-weight:600;margin-bottom:12px;">📦 Vendor Details for Refilling</div>
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Vendor Name</label>
+              <input id="issue-empty-vendor" placeholder="Enter vendor name">
+            </div>
+            <div class="form-group">
+              <label>Pickup Date</label>
+              <input type="date" id="issue-empty-pickup">
+            </div>
+            <div class="form-group">
+              <label>Expected Return</label>
+              <input type="date" id="issue-empty-return">
+            </div>
+          </div>
+        </div>
+
       </div>
 
     </div>
     <div class="modal-foot">
       <button class="btn" onclick="closeModal('modal-issue')">Cancel</button>
-      <button class="btn primary" onclick="submitIssue()">Submit Report</button>
+      <button class="btn primary" id="issue-submit-btn" onclick="submitIssue()">Submit Report</button>
     </div>
   </div>
 </div>
@@ -1510,52 +1714,80 @@ tbody tr.selected-row { background: rgba(255,85,51,0.06) !important; }
   </div>
 </div>
 
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="modal-delete-confirm">
+  <div class="modal" style="width:460px;">
+    <div class="modal-head">
+      <span class="modal-title" style="color:var(--red);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:6px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        Confirm Delete
+      </span>
+      <button class="btn ghost sm" onclick="closeModal('modal-delete-confirm')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert-banner danger" style="margin-bottom:16px;">
+        This action is <strong>permanent</strong> and cannot be undone. All records, issue history, and vendor data for the selected unit(s) will be removed.
+      </div>
+      <div id="del-unit-list" style="background:var(--bg3);border-radius:var(--r2);padding:12px 14px;max-height:200px;overflow-y:auto;font-size:12px;"></div>
+      <div style="margin-top:16px;">
+        <label style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px;font-weight:500;">Type DELETE to confirm *</label>
+        <input id="del-confirm-input" placeholder='Type "DELETE"' oninput="checkDeleteConfirm()"
+          style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:var(--r2);padding:9px 12px;font-size:14px;font-family:'DM Mono',monospace;outline:none;letter-spacing:1px;">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('modal-delete-confirm')">Cancel</button>
+      <button class="btn" id="del-confirm-btn" disabled
+        style="background:rgba(255,68,68,0.15);border-color:rgba(255,68,68,0.3);color:var(--red);opacity:0.5;cursor:not-allowed;"
+        onclick="executeDelete()">
+        🗑 Permanently Delete
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast Container -->
 <div class="toast-container" id="toast-container"></div>
 
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
 /* ============================================================
-   DATA STORE
+   FIREBASE CONFIG
    ============================================================ */
-let extinguishers = JSON.parse(localStorage.getItem('fe_data') || '[]');
-let issues = JSON.parse(localStorage.getItem('fe_issues') || '[]');
+let _app, _auth, _db;
 
-// Seed demo data if empty
-if (extinguishers.length === 0) {
-  const types = ['ABC 6kg','Modular 5kg','CO2 4.5kg','Fire Ball'];
-  const caps = ['2 kg','4 kg','6 kg','9 kg','2 L','9 L'];
-  const regions = ['North','South','East','West','Central'];
-  const entities = ['1P-GYM','2P-GYM','3P-GYM','1P-GX','2P-GX','Fitso','EBO','Warehouse'];
-  const centers = ['Site 01 – Delhi HQ','Site 02 – Mumbai Plant','Site 03 – Chennai Warehouse',
-    'Site 04 – Hyderabad DC','Site 05 – Kolkata Office','Site 06 – Pune Factory',
-    'Site 07 – Bengaluru Retail','Site 08 – Ahmedabad Hub'];
-  const statuses = ['Active','Active','Active','Active','Refill Required','Expired','Taken for Refilling','Issue Reported'];
-  const today = new Date();
-  for(let i=1;i<=64;i++){
-    const type = types[i%types.length];
-    const cap = caps[i%caps.length];
-    const region = regions[i%regions.length];
-    const entity = entities[i%entities.length];
-    const center = centers[i%centers.length];
-    const install = new Date(today); install.setFullYear(install.getFullYear()-2);
-    const pt = new Date(today); pt.setDate(pt.getDate() + (i%60)-30);
-    const refill = new Date(today); refill.setDate(refill.getDate() + (i%90)-20);
-    const status = statuses[i%statuses.length];
-    const code = genCode(type, region, center, i);
-    extinguishers.push({
-      id: i, code, type, capacity:cap, region, entity, center,
-      location:'Block '+'ABCDE'[i%5]+', Floor '+(i%4+1),
-      zone:['Server Room','Canteen','Reception','Stairwell','Parking'][i%5],
-      installDate: install.toISOString().split('T')[0],
-      ptDate: pt.toISOString().split('T')[0],
-      refillDate: refill.toISOString().split('T')[0],
-      status, vendor:'SafeGuard Ltd', manufacturer:'Minimax',
-      takenDate: status==='Taken for Refilling' ? new Date().toISOString().split('T')[0] : null,
-      vendorName: status==='Taken for Refilling' ? 'RefillPro Services' : null
-    });
+const _FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDndIoTP22jrHFrOawmT2kJSP8IvJftSxk",
+  authDomain: "fireguard-prod-3758c.firebaseapp.com",
+  databaseURL: "https://fireguard-prod-3758c-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "fireguard-prod-3758c",
+  storageBucket: "fireguard-prod-3758c.firebasestorage.app",
+  messagingSenderId: "695617325844",
+  appId: "1:695617325844:web:f5a245289fed82f7b09001",
+  measurementId: "G-YECW6EW46T"
+};
+
+function getFirebaseConfig() { return _FIREBASE_CONFIG; }
+function saveFirebaseConfig(cfg) { /* config is hardcoded */ }
+
+function initFirebase(cfg) {
+  if(firebase.apps.length === 0) {
+    firebase.initializeApp(cfg);
   }
-  saveData();
+  _app  = firebase.app();
+  _auth = firebase.auth();
+  _db   = firebase.firestore();
 }
+
+/* ============================================================
+   DATA STORE  (in-memory, synced from Firestore)
+   ============================================================ */
+let extinguishers = [];
+let issues = [];
+let _unsubFE = null;
+let _unsubIssues = null;
 
 function genCode(type, region, center, seq) {
   const typeMap={'ABC 6kg':'ABC','Modular 5kg':'MOD','CO2 4.5kg':'CO2','Fire Ball':'FBL'};
@@ -1567,10 +1799,60 @@ function genCode(type, region, center, seq) {
   return `FE-${r}-${t}-${c}-${s}`;
 }
 
+/* ── Firestore helpers ── */
+async function fsAddFE(data) {
+  const ref = await _db.collection('extinguishers').add({...data, updatedAt: firebase.firestore.FieldValue.serverTimestamp()});
+  return ref.id;
+}
+async function fsUpdateFE(fsId, data) {
+  await _db.collection('extinguishers').doc(fsId).update({...data, updatedAt: firebase.firestore.FieldValue.serverTimestamp()});
+}
+async function fsDeleteFE(fsId) {
+  await _db.collection('extinguishers').doc(fsId).delete();
+}
+async function fsAddIssue(data) {
+  const ref = await _db.collection('issues').add({...data, updatedAt: firebase.firestore.FieldValue.serverTimestamp()});
+  return ref.id;
+}
+async function fsUpdateIssue(fsId, data) {
+  await _db.collection('issues').doc(fsId).update({...data, updatedAt: firebase.firestore.FieldValue.serverTimestamp()});
+}
+
+/* saveData — now writes specific changed records to Firestore */
+/* For bulk ops we call fs* directly; saveData is kept as a no-op for compat */
 function saveData() {
-  localStorage.setItem('fe_data', JSON.stringify(extinguishers));
-  localStorage.setItem('fe_issues', JSON.stringify(issues));
   updateNavBadges();
+  // Real saves happen via fs* functions called at each operation
+}
+
+/* ── Real-time listeners ── */
+function startListeners() {
+  if(_unsubFE) _unsubFE();
+  if(_unsubIssues) _unsubIssues();
+
+  _unsubFE = _db.collection('extinguishers').onSnapshot(snap => {
+    extinguishers = snap.docs.map(d => ({...d.data(), _fsId: d.id, id: d.data().id || d.id}));
+    autoCheckDates();
+    refreshAllViews();
+  }, err => { console.warn('FE listener error', err); });
+
+  _unsubIssues = _db.collection('issues').onSnapshot(snap => {
+    issues = snap.docs.map(d => ({...d.data(), _fsId: d.id, id: d.data().id || d.id}));
+    refreshAllViews();
+  }, err => { console.warn('Issues listener error', err); });
+}
+
+function refreshAllViews() {
+  updateNavBadges();
+  const active = document.querySelector('.page.active');
+  if(!active) return;
+  const id = active.id.replace('page-','');
+  if(id==='dashboard') { populateDashboardFilters(); renderDashboard(); }
+  if(id==='assets')    { initAssetFilters(); renderAssets(); }
+  if(id==='alerts')    renderAlerts();
+  if(id==='vendor')    renderVendor();
+  if(id==='issues')    { initIssueCenterFilter(); renderIssues(); }
+  if(id==='admin')     renderAdmin();
 }
 
 /* ============================================================
@@ -1923,6 +2205,9 @@ function renderAssetTable(data) {
   window._asLastData=data;
   const start=(asPage-1)*AS_PER_PAGE;
   const paged=data.slice(start,start+AS_PER_PAGE);
+  // Show delete if admin/manager, OR if no login system active yet (null user = show for safety)
+  const role = _currentUser ? _currentUser.role : 'admin';
+  const canDelete = (role==='admin' || role==='manager');
   document.getElementById('as-table-body').innerHTML = paged.length===0
     ? `<tr><td colspan="12" style="text-align:center;padding:32px;color:var(--text3);">No extinguishers match the current search</td></tr>`
     : paged.map(e=>`
@@ -1939,6 +2224,7 @@ function renderAssetTable(data) {
       <td><div class="flex gap-2">
         <button class="btn ghost sm" onclick="viewQR(${e.id})" title="View QR">▣</button>
         <button class="btn ghost sm" onclick="openReportModalFor(${e.id})" title="Report issue">⚠</button>
+        ${canDelete?`<button class="btn ghost sm" onclick="confirmDeleteSingle(${e.id})" title="Delete" style="color:var(--red);">🗑</button>`:''}
       </div></td>
     </tr>`).join('');
 
@@ -1973,8 +2259,73 @@ function updateAssetSelectionUI() {
   const n = selectedAssets.size;
   const bar = document.getElementById('as-select-bar');
   const info = document.getElementById('as-select-info');
+  const delBtn = document.getElementById('as-bulk-delete-btn');
   if(bar) bar.style.display = n>0?'flex':'none';
   if(info) info.textContent = `${n} extinguisher${n!==1?'s':''} selected`;
+  // Show delete for admin/manager (or if no auth active)
+  const role = _currentUser ? _currentUser.role : 'admin';
+  const canDelete = (role==='admin' || role==='manager');
+  if(delBtn) delBtn.style.display = canDelete && n>0 ? '' : 'none';
+}
+
+/* ── DELETE FUNCTIONS ── */
+let _deleteIds = [];
+
+function confirmDeleteSingle(id) {
+  _deleteIds = [id];
+  openDeleteModal();
+}
+
+function confirmDeleteSelected() {
+  _deleteIds = [...selectedAssets];
+  if(!_deleteIds.length) { toast('Select extinguishers to delete','error'); return; }
+  openDeleteModal();
+}
+
+function openDeleteModal() {
+  document.getElementById('del-confirm-input').value = '';
+  checkDeleteConfirm();
+  const list = document.getElementById('del-unit-list');
+  list.innerHTML = _deleteIds.map(id=>{
+    const e=extinguishers.find(x=>x.id===id);
+    if(!e) return '';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <span class="mono" style="font-size:11px;color:var(--accent);">${e.code}</span>
+      <span style="color:var(--text2);font-size:11px;">${e.type} · ${e.capacity}</span>
+      <span style="margin-left:auto;color:var(--text3);font-size:10px;">${e.center}</span>
+    </div>`;
+  }).join('') + `<div style="margin-top:8px;color:var(--text3);font-size:11px;text-align:right;">${_deleteIds.length} unit${_deleteIds.length!==1?'s':''} will be deleted</div>`;
+  openModal('modal-delete-confirm');
+  setTimeout(()=>document.getElementById('del-confirm-input').focus(), 100);
+}
+
+function checkDeleteConfirm() {
+  const val = (document.getElementById('del-confirm-input').value||'').trim();
+  const btn = document.getElementById('del-confirm-btn');
+  const isConfirmed = val === 'DELETE';
+  btn.disabled = !isConfirmed;
+  btn.style.opacity = isConfirmed ? '1' : '0.5';
+  btn.style.cursor = isConfirmed ? 'pointer' : 'not-allowed';
+}
+
+async function executeDelete() {
+  if(!_deleteIds.length) return;
+  const toDelete = _deleteIds.map(id=>extinguishers.find(x=>x.id===id)).filter(Boolean);
+  const codes = toDelete.map(e=>e.code);
+  const issueToDelete = issues.filter(i=>_deleteIds.includes(i.unitId));
+
+  try {
+    const batch = _db.batch();
+    toDelete.forEach(e=>{ if(e._fsId) batch.delete(_db.collection('extinguishers').doc(e._fsId)); });
+    issueToDelete.forEach(i=>{ if(i._fsId) batch.delete(_db.collection('issues').doc(i._fsId)); });
+    await batch.commit();
+    _deleteIds.forEach(id=>selectedAssets.delete(id));
+    closeModal('modal-delete-confirm');
+    _deleteIds=[];
+    toast(`Deleted ${codes.length} extinguisher${codes.length!==1?'s':''}`);
+    updateNavBadges();
+    // Listeners will auto-refresh views
+  } catch(err) { toast('Delete failed: '+err.message,'error'); }
 }
 
 
@@ -2168,7 +2519,7 @@ function openVendorAccept(id) {
   openModal('modal-vendor-accept');
 }
 
-function submitVendorAccept() {
+async function submitVendorAccept() {
   const id=_vendorAcceptId;
   const e=extinguishers.find(x=>x.id===id); if(!e) return;
   const vname=document.getElementById('vac-vendor').value.trim();
@@ -2176,16 +2527,16 @@ function submitVendorAccept() {
   const doRefill=document.getElementById('vac-refill').checked;
   const doHPT=document.getElementById('vac-hpt').checked;
   if(!doRefill&&!doHPT) { toast('Select at least one service type','error'); return; }
-  e.status='With Vendor';
-  e.takenDate=document.getElementById('vac-pickup').value||today();
-  e.vendorName=vname;
-  e.expectedReturn=document.getElementById('vac-return-expected').value||null;
-  e.serviceType=(doRefill&&doHPT?'Refill + HPT':doRefill?'Refill':'HPT');
-  e.vendorNotes=document.getElementById('vac-notes').value;
-  saveData();
-  closeModal('modal-vendor-accept');
-  toast(`${e.code} sent to ${vname} for ${e.serviceType}`);
-  renderVendor();
+  const serviceType=doRefill&&doHPT?'Refill + HPT':doRefill?'Refill':'HPT';
+  try {
+    await fsUpdateFE(e._fsId, {
+      status:'With Vendor', takenDate:document.getElementById('vac-pickup').value||today(),
+      vendorName:vname, expectedReturn:document.getElementById('vac-return-expected').value||null,
+      serviceType, vendorNotes:document.getElementById('vac-notes').value
+    });
+    closeModal('modal-vendor-accept');
+    toast(`${e.code} sent to ${vname} for ${serviceType}`);
+  } catch(err) { toast('Save failed: '+err.message,'error'); }
 }
 
 /* ── RECEIVE MODAL ── */
@@ -2205,25 +2556,24 @@ function openVendorReceive(id) {
   openModal('modal-vendor-receive');
 }
 
-function submitVendorReceive() {
+async function submitVendorReceive() {
   const id=_vendorReceiveId;
   const e=extinguishers.find(x=>x.id===id); if(!e) return;
   const pt=document.getElementById('vrc-pt').value;
   const rf=document.getElementById('vrc-refill').value;
   const recv=document.getElementById('vrc-received').value;
   if(!pt||!rf||!recv) { toast('Fill all required date fields','error'); return; }
-  e.status='Compliant';
-  e.ptDate=pt;
-  e.refillDate=rf;
-  e.receivedDate=recv;
-  e.vendorName=document.getElementById('vrc-vendor-done').value||e.vendorName;
-  e.serviceNotes=document.getElementById('vrc-notes').value;
-  e.takenDate=null; e.expectedReturn=null;
-  saveData();
-  closeModal('modal-vendor-receive');
-  toast(`${e.code} marked Compliant — back in service`,'success');
-  renderVendor();
-  updateNavBadges();
+  try {
+    await fsUpdateFE(e._fsId, {
+      status:'Compliant', ptDate:pt, refillDate:rf, receivedDate:recv,
+      vendorName:document.getElementById('vrc-vendor-done').value||e.vendorName,
+      serviceNotes:document.getElementById('vrc-notes').value,
+      takenDate:null, expectedReturn:null
+    });
+    closeModal('modal-vendor-receive');
+    toast(`${e.code} marked Compliant — back in service`,'success');
+    updateNavBadges();
+  } catch(err) { toast('Save failed: '+err.message,'error'); }
 }
 
 // keep old vendorTake for any legacy calls
@@ -2246,35 +2596,22 @@ function openVendorNotReceived(id) {
   openModal('modal-vendor-not-received');
 }
 
-function submitVendorNotReceived() {
+async function submitVendorNotReceived() {
   const id=_vendorNotReceivedId;
   const e=extinguishers.find(x=>x.id===id); if(!e) return;
   const reason=document.getElementById('vnr-reason').value;
   if(!reason){ toast('Please select a reason','error'); return; }
-
-  // Log the not-received event on the unit
-  if(!e.notReceivedLog) e.notReceivedLog=[];
-  e.notReceivedLog.push({
-    date:today(),
-    reason,
-    notes:document.getElementById('vnr-notes').value,
+  const log = [...(e.notReceivedLog||[]), {
+    date:today(), reason, notes:document.getElementById('vnr-notes').value,
     reporter:document.getElementById('vnr-reporter').value||'Admin',
-    vendor:e.vendorName,
-    serviceType:e.serviceType,
-    takenDate:e.takenDate
-  });
-
-  // Revert status back to Refill Required
-  e.status='Refill Required';
-  e.takenDate=null;
-  e.expectedReturn=null;
-  e.serviceType=null;
-
-  saveData();
-  closeModal('modal-vendor-not-received');
-  toast(`${e.code} moved back to Refill Required — ${reason}`,'warn');
-  renderVendor();
-  updateNavBadges();
+    vendor:e.vendorName, serviceType:e.serviceType, takenDate:e.takenDate
+  }];
+  try {
+    await fsUpdateFE(e._fsId, { status:'Refill Required', takenDate:null, expectedReturn:null, serviceType:null, notReceivedLog:log });
+    closeModal('modal-vendor-not-received');
+    toast(`${e.code} moved back to Refill Required — ${reason}`,'warn');
+    updateNavBadges();
+  } catch(err) { toast('Save failed: '+err.message,'error'); }
 }
 
 /* ============================================================
@@ -2424,20 +2761,21 @@ function openOrderPart(issueId) {
   openModal('modal-order-part');
 }
 
-function submitOrderPart() {
+async function submitOrderPart() {
   const i=issues.find(x=>x.id===_orderPartIssueId); if(!i) return;
   const parts=document.getElementById('opi-parts').value.trim();
   if(!parts){ toast('Enter the part(s) ordered','error'); return; }
-  i.status='Part Ordered';
-  i.orderedParts=parts;
-  i.orderDate=document.getElementById('opi-date').value;
-  i.orderSupplier=document.getElementById('opi-supplier').value;
-  i.orderEta=document.getElementById('opi-eta').value;
-  saveData();
-  closeModal('modal-order-part');
-  toast('Issue updated — part ordered');
-  renderIssues();
-  updateNavBadges();
+  try {
+    await fsUpdateIssue(i._fsId, {
+      status:'Part Ordered', orderedParts:parts,
+      orderDate:document.getElementById('opi-date').value,
+      orderSupplier:document.getElementById('opi-supplier').value,
+      orderEta:document.getElementById('opi-eta').value
+    });
+    closeModal('modal-order-part');
+    toast('Issue updated — part ordered');
+    updateNavBadges();
+  } catch(err) { toast('Save failed: '+err.message,'error'); }
 }
 
 /* ── CLOSE ISSUE MODAL ── */
@@ -2489,7 +2827,7 @@ function cliClearFile() {
   document.getElementById('cli-dropzone').style.display='';
 }
 
-function submitCloseIssue() {
+async function submitCloseIssue() {
   const i=issues.find(x=>x.id===_closeIssueId); if(!i) return;
   const parts=document.getElementById('cli-parts').value.trim();
   const invoiceNo=document.getElementById('cli-invoice-no').value.trim();
@@ -2498,26 +2836,21 @@ function submitCloseIssue() {
   if(!invoiceNo){ toast('Invoice number is required','error'); return; }
   if(!_cliFileData){ toast('Please upload the invoice file','error'); return; }
   if(!date){ toast('Select the date received','error'); return; }
-
-  i.status='Closed';
-  i.closedDate=date;
-  i.closedParts=parts;
-  i.closedSupplier=document.getElementById('cli-supplier').value;
-  i.invoiceNo=invoiceNo;
-  i.invoiceAmount=document.getElementById('cli-amount').value;
-  i.invoiceFile=_cliFileData;
-  i.closingNotes=document.getElementById('cli-notes').value;
-  i.closedBy='Admin';
-
-  // Restore extinguisher status to Active if it was Issue Reported
-  const e=extinguishers.find(x=>x.id===i.unitId);
-  if(e&&e.status==='Issue Reported') e.status='Active';
-
-  saveData();
-  closeModal('modal-close-issue');
-  toast(`Issue closed — invoice ${invoiceNo} recorded`,'success');
-  renderIssues();
-  updateNavBadges();
+  try {
+    await fsUpdateIssue(i._fsId, {
+      status:'Closed', closedDate:date, closedParts:parts,
+      closedSupplier:document.getElementById('cli-supplier').value,
+      invoiceNo, invoiceAmount:document.getElementById('cli-amount').value,
+      invoiceFile:_cliFileData, closingNotes:document.getElementById('cli-notes').value,
+      closedBy: _currentUser ? _currentUser.name : 'Admin'
+    });
+    // Restore FE status
+    const e=extinguishers.find(x=>x.id===i.unitId);
+    if(e&&e.status==='Issue Reported') await fsUpdateFE(e._fsId,{status:'Active'});
+    closeModal('modal-close-issue');
+    toast(`Issue closed — invoice ${invoiceNo} recorded`,'success');
+    updateNavBadges();
+  } catch(err) { toast('Save failed: '+err.message,'error'); }
 }
 
 function previewInvoice(issueId) {
@@ -2541,6 +2874,16 @@ function openReportModal(preselectedId) {
 
   // Reset checklist
   document.querySelectorAll('#issue-checklist input[type=checkbox]').forEach(c=>c.checked=false);
+
+  // Reset empty FE toggle
+  const emptyCb=document.getElementById('issue-empty-fe');
+  if(emptyCb) { emptyCb.checked=false; }
+  const emptyForm=document.getElementById('issue-empty-vendor-form');
+  if(emptyForm) emptyForm.style.display='none';
+  const emptyCard=document.getElementById('issue-empty-card');
+  if(emptyCard){ emptyCard.style.background='rgba(245,166,35,0.07)'; emptyCard.style.borderColor='rgba(245,166,35,0.2)'; }
+  const submitBtn=document.getElementById('issue-submit-btn');
+  if(submitBtn){ submitBtn.textContent='Submit Report'; submitBtn.style.background=''; submitBtn.style.borderColor=''; }
 
   // Reset text fields safely
   ['issue-notes','issue-reporter','issue-search-q','issue-qr-input'].forEach(id=>{
@@ -2652,26 +2995,171 @@ function qrLookupIssue() {
   </div>`;
 }
 
-function submitIssue() {
+function toggleEmptyFE() {
+  const cb = document.getElementById('issue-empty-fe');
+  const c9 = document.getElementById('c9');
+  const card = document.getElementById('issue-empty-card');
+  const form = document.getElementById('issue-empty-vendor-form');
+  const btn = document.getElementById('issue-submit-btn');
+  const typesel = document.getElementById('issue-type');
+
+  // cb may have just been toggled by its own click — read current state
+  const isEmpty = cb.checked;
+
+  // Sync checklist c9
+  if(c9) c9.checked = isEmpty;
+
+  // Highlight card
+  card.style.background = isEmpty ? 'rgba(245,166,35,0.13)' : 'rgba(245,166,35,0.07)';
+  card.style.borderColor = isEmpty ? 'var(--amber)' : 'rgba(245,166,35,0.2)';
+
+  // Show/hide vendor form
+  form.style.display = isEmpty ? '' : 'none';
+
+  // Auto-set issue type
+  if(isEmpty && typesel) typesel.value = 'Empty / Discharged';
+
+  // Change submit button
+  if(btn) {
+    if(isEmpty) {
+      btn.textContent = '📦 Send to Vendor for Refilling';
+      btn.style.background = 'var(--amber)';
+      btn.style.borderColor = 'var(--amber)';
+    } else {
+      btn.textContent = 'Submit Report';
+      btn.style.background = '';
+      btn.style.borderColor = '';
+    }
+  }
+
+  // Pre-fill pickup date
+  if(isEmpty) {
+    const pd = document.getElementById('issue-empty-pickup');
+    if(pd && !pd.value) pd.value = today();
+  }
+}
+
+function syncEmptyCheckbox(c9cb) {
+  const mainCb = document.getElementById('issue-empty-fe');
+  if(mainCb) mainCb.checked = c9cb.checked;
+  toggleEmptyFE();
+}
+
+async function submitIssue() {
   if(!_selectedIssueUnitId) { toast('Please select an extinguisher first','error'); return; }
-  const missing=[];
+  const isEmpty = document.getElementById('issue-empty-fe').checked;
+  const missing = [];
   document.querySelectorAll('#issue-checklist input:checked').forEach(cb=>missing.push(cb.nextElementSibling.textContent));
-  const issue={
+
+  if(isEmpty) {
+    const vendor = (document.getElementById('issue-empty-vendor').value||'').trim();
+    const e = extinguishers.find(x=>x.id===_selectedIssueUnitId); if(!e) return;
+    const issue = {
+      id:Date.now(), unitId:_selectedIssueUnitId, type:'Empty / Discharged', missing,
+      notes: document.getElementById('issue-notes').value + (vendor ? ' [Vendor: '+vendor+']' : ''),
+      reporter: document.getElementById('issue-reporter').value,
+      severity:'High', date:today(), status:'Closed',
+      closedDate:today(), closedParts:'Refilling by vendor',
+      closedBy:_currentUser ? _currentUser.name : 'System',
+      autoClosedReason:'Empty — sent to vendor for refilling'
+    };
+    try {
+      await fsAddIssue(issue);
+      await fsUpdateFE(e._fsId, {
+        status:'With Vendor',
+        takenDate:document.getElementById('issue-empty-pickup').value||today(),
+        expectedReturn:document.getElementById('issue-empty-return').value||null,
+        vendorName:vendor||'Pending assignment', serviceType:'Refill',
+        vendorNotes:document.getElementById('issue-notes').value||'Empty extinguisher reported'
+      });
+      closeModal('modal-issue');
+      toast('🧯 '+e.code+' sent to vendor for refilling','success');
+      updateNavBadges();
+    } catch(err) { toast('Save failed: '+err.message,'error'); }
+    return;
+  }
+
+  const e = extinguishers.find(x=>x.id===_selectedIssueUnitId);
+  const issue = {
     id:Date.now(), unitId:_selectedIssueUnitId,
-    type:document.getElementById('issue-type').value,
-    missing, notes:document.getElementById('issue-notes').value,
+    type:document.getElementById('issue-type').value, missing,
+    notes:document.getElementById('issue-notes').value,
     reporter:document.getElementById('issue-reporter').value,
     severity:document.getElementById('issue-severity').value,
     date:today(), status:'Open'
   };
-  issues.push(issue);
-  const e=extinguishers.find(x=>x.id===_selectedIssueUnitId);
-  if(e) e.status='Issue Reported';
-  saveData();
-  closeModal('modal-issue');
-  toast('Issue reported successfully','success');
-  renderIssues();
+  try {
+    await fsAddIssue(issue);
+    if(e) await fsUpdateFE(e._fsId, {status:'Issue Reported'});
+    closeModal('modal-issue');
+    toast('Issue reported successfully','success');
+    updateNavBadges();
+  } catch(err) { toast('Save failed: '+err.message,'error'); }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function resolveIssue(id) { openCloseIssue(id); }
 
@@ -2702,54 +3190,39 @@ function renderAdmin() {
     <div class="flex items-center" style="padding:8px 0;border-bottom:1px solid var(--border);"><span style="flex:1;">Due in next 30 days</span><span style="font-weight:600;color:var(--amber);">${upcoming}</span></div>
     <div class="flex items-center" style="padding:8px 0;border-bottom:1px solid var(--border);"><span style="flex:1;">Open issues</span><span style="font-weight:600;color:var(--red);">${issues.filter(i=>i.status==='Open').length}</span></div>
     <div class="flex items-center" style="padding:8px 0;"><span style="flex:1;">Total fleet</span><span style="font-weight:600;">${extinguishers.length}</span></div>`;
+
+  // Load pending user requests
+  if(_currentUser && _currentUser.role==='admin') loadPendingUsers();
 }
 
-function adminMarkRefill() {
+async function adminMarkRefill() {
   const id=parseInt(document.getElementById('admin-refill-select').value);
   if(!id) { toast('Select a unit first','error'); return; }
-  adminMarkRefillById(id);
+  await adminMarkRefillById(id);
   renderAdmin();
 }
-function adminMarkRefillById(id) {
-  const e=extinguishers.find(x=>x.id===id);
-  if(!e) return;
-  e.status='Refill Required';
-  saveData();
-  toast(`${e.code} marked as Refill Required`,'warn');
-  renderDashboard();
+async function adminMarkRefillById(id) {
+  const e=extinguishers.find(x=>x.id===id); if(!e) return;
+  try {
+    await fsUpdateFE(e._fsId, {status:'Refill Required'});
+    toast(e.code+' marked as Refill Required','warn');
+    renderDashboard();
+  } catch(err) { toast('Save failed: '+err.message,'error'); }
 }
-function adminReturn() {
+async function adminReturn() {
   const id=parseInt(document.getElementById('admin-return-select').value);
   const pt=document.getElementById('admin-new-pt').value;
   const rf=document.getElementById('admin-new-refill').value;
   if(!id||!pt||!rf) { toast('Fill all fields','error'); return; }
-  const e=extinguishers.find(x=>x.id===id);
-  if(!e) return;
-  e.status='Active'; e.ptDate=pt; e.refillDate=rf; e.takenDate=null; e.vendorName=null;
-  saveData();
-  toast(`${e.code} returned and marked Active`);
-  renderAdmin();
+  const e=extinguishers.find(x=>x.id===id); if(!e) return;
+  try {
+    await fsUpdateFE(e._fsId, {status:'Active', ptDate:pt, refillDate:rf, takenDate:null, vendorName:null});
+    toast(e.code+' returned and marked Active');
+    renderAdmin();
+  } catch(err) { toast('Save failed: '+err.message,'error'); }
 }
 
-/* ============================================================
-   REGISTER
-   ============================================================ */
-let regSeq = 1000;
-let _lastRegisteredId = null;
-
-function makeQR(containerEl, text, size) {
-  containerEl.innerHTML = '';
-  // Encode a URL so scanning opens the action page directly
-  const isCode = /^FE-/.test(text);
-  const qrText = isCode ? (spGetBaseURL()+'?scan='+encodeURIComponent(text)) : text;
-  return new QRCode(containerEl, {
-    text: qrText, width: size, height: size,
-    colorDark: '#000000', colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.M
-  });
-}
-
-function registerUnit() {
+async function registerUnit() {
   const type=document.getElementById('reg-type').value;
   const cap=document.getElementById('reg-capacity').value;
   const region=document.getElementById('reg-region').value;
@@ -2761,34 +3234,43 @@ function registerUnit() {
   if(!type||!cap||!region||!entity||!center||!pt||!refill||!install) {
     toast('Please fill all required fields','error'); return;
   }
-  regSeq++;
-  const code=genCode(type,region,center,regSeq);
-  const unit={
-    id:Date.now(), code, type, capacity:cap, region, entity, center,
+  const seq = Date.now();
+  const code = genCode(type, region, center, seq);
+  const unit = {
+    id: seq, code, type, capacity:cap, region, entity, center,
     location:document.getElementById('reg-location').value,
     zone:document.getElementById('reg-zone').value,
     installDate:install, ptDate:pt, refillDate:refill,
     status:'Active',
     vendor:document.getElementById('reg-vendor').value,
-    manufacturer:document.getElementById('reg-mfg').value
+    manufacturer:document.getElementById('reg-mfg').value,
+    createdBy: _currentUser ? _currentUser.email : 'system'
   };
-  extinguishers.push(unit);
-  _lastRegisteredId = unit.id;
-  saveData();
-  document.getElementById('preview-code').textContent=code;
-  document.getElementById('preview-details').innerHTML=`
-    <strong>Type:</strong> ${type}<br>
-    <strong>Capacity:</strong> ${cap}<br>
-    <strong>Region:</strong> ${region} &nbsp;|&nbsp; <strong>Entity:</strong> ${entity}<br>
-    <strong>Center:</strong> ${center}<br>
-    <strong>PT Due:</strong> ${pt} &nbsp;|&nbsp; <strong>Refill Due:</strong> ${refill}<br>
-    <strong>Status:</strong> Active`;
-  document.getElementById('barcode-placeholder').style.display='none';
-  document.getElementById('barcode-preview-card').style.display='block';
-  document.getElementById('qr-preview-label').textContent=code;
-  setTimeout(()=>{ makeQR(document.getElementById('qr-preview'), code, 160); },50);
-  toast(`Registered: ${code}`);
-  updateNavBadges();
+  const btn=document.querySelector('#page-register .btn.primary'); if(btn){ btn.textContent='Saving…'; btn.disabled=true; }
+  try {
+    await fsAddFE(unit);
+    document.getElementById('preview-code').textContent=code;
+    document.getElementById('preview-details').innerHTML=`<strong>Type:</strong> ${type}<br><strong>Capacity:</strong> ${cap}<br><strong>Region:</strong> ${region} &nbsp;|&nbsp; <strong>Entity:</strong> ${entity}<br><strong>Center:</strong> ${center}<br><strong>PT Due:</strong> ${pt} &nbsp;|&nbsp; <strong>Refill Due:</strong> ${refill}<br><strong>Status:</strong> Active`;
+    document.getElementById('barcode-placeholder').style.display='none';
+    document.getElementById('barcode-preview-card').style.display='block';
+    document.getElementById('qr-preview-label').textContent=code;
+    setTimeout(()=>{ makeQR(document.getElementById('qr-preview'), code, 160); },50);
+    toast(`Registered: ${code}`);
+    updateNavBadges();
+  } catch(e) { toast('Save failed: '+e.message,'error'); }
+  finally { if(btn){ btn.textContent='Generate Code & Register'; btn.disabled=false; } }
+}
+
+function makeQR(containerEl, text, size) {
+  containerEl.innerHTML = '';
+  // Encode a URL so scanning opens the action page directly
+  const isCode = /^FE-/.test(text);
+  const qrText = isCode ? (spGetBaseURL()+'?scan='+encodeURIComponent(text)) : text;
+  return new QRCode(containerEl, {
+    text: qrText, width: size, height: size,
+    colorDark: '#000000', colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
 }
 
 /* ============================================================
@@ -3517,31 +3999,40 @@ function bulkParse() {
   bulkGoStep(3);
 }
 
-function bulkImport() {
+async function bulkImport() {
   const rows = (window._bulkParsedRows||[]).filter(r=>r._valid);
   if(!rows.length) { toast('No valid rows to import','error'); return; }
-  let seq = extinguishers.length + 1000;
-  rows.forEach(row=>{
-    seq++;
-    const code = genCode(row.type, row.region, row.center, seq);
-    extinguishers.push({
-      id: Date.now()+seq,
-      code, type:row.type, capacity:row.capacity||'—',
-      region:row.region, entity:row.entity, center:row.center,
-      location:row.location||'', zone:row.zone||'',
-      installDate:row.install_date, ptDate:row.pt_due_date,
-      refillDate:row.refill_due_date, status:'Active',
-      vendor:row.vendor||'', manufacturer:row.manufacturer||''
+  const btn=document.getElementById('bulk-import-btn');
+  if(btn){ btn.textContent='Importing…'; btn.disabled=true; }
+  try {
+    const batch = _db.batch();
+    let seq = Date.now();
+    rows.forEach(row=>{
+      seq++;
+      const code = genCode(row.type, row.region, row.center, seq);
+      const ref = _db.collection('extinguishers').doc();
+      batch.set(ref, {
+        id:seq, code, type:row.type, capacity:row.capacity||'—',
+        region:row.region, entity:row.entity, center:row.center,
+        location:row.location||'', zone:row.zone||'',
+        installDate:row.install_date, ptDate:row.pt_due_date,
+        refillDate:row.refill_due_date, status:'Active',
+        vendor:row.vendor||'', manufacturer:row.manufacturer||'',
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
     });
-  });
-  saveData();
-  autoCheckDates();
-  document.getElementById('bulk-result-icon').textContent = rows.length>0?'✅':'⚠️';
-  document.getElementById('bulk-result-title').textContent = `${rows.length} extinguisher${rows.length!==1?'s':''} imported successfully`;
-  document.getElementById('bulk-result-sub').textContent = `Unique codes and barcodes have been generated. View them in the Asset Registry.`;
-  bulkGoStep(4);
-  toast(`${rows.length} units imported`,'success');
-  updateNavBadges();
+    await batch.commit();
+    document.getElementById('bulk-result-icon').textContent='✅';
+    document.getElementById('bulk-result-title').textContent=rows.length+' extinguisher'+(rows.length!==1?'s':'')+' imported successfully';
+    document.getElementById('bulk-result-sub').textContent='Unique codes generated. View them in the Asset Registry.';
+    bulkGoStep(4);
+    toast(rows.length+' units imported','success');
+    updateNavBadges();
+  } catch(err) {
+    toast('Import failed: '+err.message,'error');
+  } finally {
+    if(btn){ btn.textContent='Import Valid Rows →'; btn.disabled=false; }
+  }
 }
 
 /* ============================================================
@@ -3728,15 +4219,19 @@ function resumeScanning() {
   scanFrame();
 }
 
-function autoCheckDates() {
-  extinguishers.forEach(e=>{
+async function autoCheckDates() {
+  const toUpdate = extinguishers.filter(e=>{
     if(e.status==='Active') {
-      if(daysDiff(e.ptDate)<0||daysDiff(e.refillDate)<0) {
-        e.status = daysDiff(e.ptDate)<0 ? 'Expired' : 'Refill Required';
-      }
+      if(daysDiff(e.ptDate)<0||daysDiff(e.refillDate)<0) return true;
     }
+    return false;
   });
-  saveData();
+  for(const e of toUpdate) {
+    const newStatus = daysDiff(e.ptDate)<0 ? 'Expired' : 'Refill Required';
+    if(e._fsId) {
+      try { await fsUpdateFE(e._fsId, {status:newStatus}); } catch(_){}
+    } else { e.status=newStatus; }
+  }
 }
 
 /* ============================================================
@@ -3749,189 +4244,585 @@ function spGetBaseURL() {
   return window.location.href.split('?')[0];
 }
 
-function spInit() {
+async function spInit() {
   const params = new URLSearchParams(window.location.search);
   const code = params.get('scan');
-  if(!code) return; // normal app mode
+  if(!code) return;
 
-  // Hide the main app, show scan page
   document.querySelector('.app').style.display='none';
   document.getElementById('fab-scan').style.display='none';
-  const sp = document.getElementById('scan-page');
-  sp.style.display='block';
+  document.getElementById('scan-page').style.display='block';
 
-  // Load data from localStorage (same store as main app)
-  const stored = JSON.parse(localStorage.getItem('fe_data')||'[]');
-  const e = stored.find(x=>x.code.toUpperCase()===code.toUpperCase());
+  // Init Firebase from hardcoded config
+  try { if(!_app) initFirebase(_FIREBASE_CONFIG); } catch(e) {}
 
-  document.getElementById('sp-loading').style.display='none';
+  try {
+    const snap = await _db.collection('extinguishers').get();
+    const all = snap.docs.map(d=>({...d.data(), _fsId:d.id}));
+    const e = all.find(x=>x.code.toUpperCase()===code.toUpperCase());
+    document.getElementById('sp-loading').style.display='none';
+    if(!e) {
+      document.getElementById('sp-not-found').style.display='';
+      document.getElementById('sp-not-found-code').textContent='Code: '+code;
+      return;
+    }
+    window._spUnit = e;
+    _spUnitId = e.id;
+    const pd=spDaysDiff(e.ptDate), rd=spDaysDiff(e.refillDate);
 
-  if(!e) {
+    document.getElementById('sp-unit-info').style.display='';
+    document.getElementById('sp-code').textContent=e.code;
+    document.getElementById('sp-details').innerHTML=`
+      <strong style="color:#e8eaf0;">${e.type}</strong> · ${e.capacity}<br>
+      ${e.center} · ${e.entity} · ${e.region}<br>
+      HPT Due: <span style="color:${pd<0?'#ff4444':pd<=30?'#f5a623':'#9099b0'};">${e.ptDate}</span>
+      &nbsp;·&nbsp; Refill Due: <span style="color:${rd<0?'#ff4444':rd<=30?'#f5a623':'#9099b0'};">${e.refillDate}</span>`;
+
+    const badges=[];
+    if(pd<0)    badges.push(`<span style="padding:3px 8px;background:rgba(255,68,68,0.15);color:#ff4444;border-radius:20px;font-size:11px;font-weight:500;">HPT Overdue</span>`);
+    else if(pd<=30) badges.push(`<span style="padding:3px 8px;background:rgba(245,166,35,0.15);color:#f5a623;border-radius:20px;font-size:11px;font-weight:500;">HPT Due in ${pd}d</span>`);
+    if(rd<0)    badges.push(`<span style="padding:3px 8px;background:rgba(255,68,68,0.15);color:#ff4444;border-radius:20px;font-size:11px;font-weight:500;">Refill Overdue</span>`);
+    else if(rd<=30) badges.push(`<span style="padding:3px 8px;background:rgba(245,166,35,0.15);color:#f5a623;border-radius:20px;font-size:11px;font-weight:500;">Refill Due in ${rd}d</span>`);
+    badges.push(`<span style="padding:3px 8px;background:rgba(255,255,255,0.06);color:#9099b0;border-radius:20px;font-size:11px;">${e.status}</span>`);
+    document.getElementById('sp-badges').innerHTML=badges.join('');
+
+    document.getElementById('sp-actions').style.display='';
+    spBuildActions(e);
+  } catch(err) {
+    document.getElementById('sp-loading').style.display='none';
     document.getElementById('sp-not-found').style.display='';
-    document.getElementById('sp-not-found-code').textContent=`Code: ${code}`;
-    return;
+    document.getElementById('sp-not-found-code').textContent='Error loading unit: '+err.message;
   }
-
-  _spUnitId = e.id;
-  const pd=spDaysDiff(e.ptDate), rd=spDaysDiff(e.refillDate);
-
-  document.getElementById('sp-unit-info').style.display='';
-  document.getElementById('sp-code').textContent=e.code;
-  document.getElementById('sp-details').innerHTML=`
-    <strong style="color:#e8eaf0;">${e.type}</strong> · ${e.capacity}<br>
-    ${e.center} · ${e.entity} · ${e.region}<br>
-    HPT Due: <span style="color:${pd<0?'#ff4444':pd<=30?'#f5a623':'#9099b0'};">${e.ptDate}</span>
-    &nbsp;·&nbsp; Refill Due: <span style="color:${rd<0?'#ff4444':rd<=30?'#f5a623':'#9099b0'};">${e.refillDate}</span>`;
-
-  const badges=[];
-  if(pd<0)    badges.push(`<span style="padding:3px 8px;background:rgba(255,68,68,0.15);color:#ff4444;border-radius:20px;font-size:11px;font-weight:500;">HPT Overdue</span>`);
-  else if(pd<=30) badges.push(`<span style="padding:3px 8px;background:rgba(245,166,35,0.15);color:#f5a623;border-radius:20px;font-size:11px;font-weight:500;">HPT Due in ${pd}d</span>`);
-  if(rd<0)    badges.push(`<span style="padding:3px 8px;background:rgba(255,68,68,0.15);color:#ff4444;border-radius:20px;font-size:11px;font-weight:500;">Refill Overdue</span>`);
-  else if(rd<=30) badges.push(`<span style="padding:3px 8px;background:rgba(245,166,35,0.15);color:#f5a623;border-radius:20px;font-size:11px;font-weight:500;">Refill Due in ${rd}d</span>`);
-  badges.push(`<span style="padding:3px 8px;background:rgba(255,255,255,0.06);color:#9099b0;border-radius:20px;font-size:11px;">${e.status}</span>`);
-  document.getElementById('sp-badges').innerHTML=badges.join('');
-
-  document.getElementById('sp-actions').style.display='';
-  spBuildActions(e);
 }
 
 function spDaysDiff(d) { return Math.ceil((new Date(d)-new Date())/(1000*60*60*24)); }
 
 function spBuildActions(e) {
   const btns=[];
-  const stored = JSON.parse(localStorage.getItem('fe_data')||'[]');
-  const fresh = stored.find(x=>x.id===e.id)||e;
-
-  if(fresh.status!=='With Vendor'&&fresh.status!=='Compliant') {
+  if(e.status!=='With Vendor'&&e.status!=='Compliant')
     btns.push(spActionBtn('📦 Move to Vendor for Refill / HPT','#f5a623','rgba(245,166,35,0.12)','spShowForm("vendor")'));
-  }
-  if(fresh.status==='With Vendor') {
+  if(e.status==='With Vendor')
     btns.push(spActionBtn('✓ Received from Vendor','#22c97a','rgba(34,201,122,0.12)','spShowForm("receive")'));
-  }
   btns.push(spActionBtn('⚠ Report Defect / Issue','#ff4444','rgba(255,68,68,0.1)','spShowForm("issue")'));
-
   document.getElementById('sp-action-buttons').innerHTML=btns.join('');
-
-  // Pre-fill vendor form dates
-  const today=new Date().toISOString().split('T')[0];
-  const vd=document.getElementById('spv-date'); if(vd) vd.value=today;
-  const rd2=document.getElementById('spr-received'); if(rd2) rd2.value=today;
-  if(fresh.vendorName) { const vi=document.getElementById('spv-vendor'); if(vi) vi.value=fresh.vendorName; }
+  const t=new Date().toISOString().split('T')[0];
+  const vd=document.getElementById('spv-date'); if(vd) vd.value=t;
+  const rd=document.getElementById('spr-received'); if(rd) rd.value=t;
+  if(e.vendorName) { const vi=document.getElementById('spv-vendor'); if(vi) vi.value=e.vendorName; }
 }
 
 function spActionBtn(label, color, bg, onclick) {
-  return `<button onclick="${onclick}" style="width:100%;padding:16px 18px;background:${bg};border:1px solid ${color}33;border-radius:10px;color:${color};font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;transition:background 0.15s;"
-    onmouseover="this.style.background='${bg.replace('0.12','0.2').replace('0.1','0.18')}'" onmouseout="this.style.background='${bg}'">${label}</button>`;
+  return '<button onclick="'+onclick+'" style="width:100%;padding:16px 18px;background:'+bg+';border:1px solid '+color+'33;border-radius:10px;color:'+color+';font-size:14px;font-weight:500;cursor:pointer;font-family:\'DM Sans\',sans-serif;text-align:left;">'+label+'</button>';
 }
 
 function spShowActions() {
-  ['sp-form-vendor','sp-form-receive','sp-form-issue','sp-success'].forEach(id=>{
-    document.getElementById(id).style.display='none';
-  });
+  ['sp-form-vendor','sp-form-receive','sp-form-issue','sp-success'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById('sp-actions').style.display='';
 }
-
 function spShowForm(form) {
   document.getElementById('sp-actions').style.display='none';
-  ['sp-form-vendor','sp-form-receive','sp-form-issue','sp-success'].forEach(id=>{
-    document.getElementById(id).style.display='none';
-  });
+  ['sp-form-vendor','sp-form-receive','sp-form-issue','sp-success'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById('sp-form-'+form).style.display='';
 }
-
 function spShowSuccess(icon, title, sub) {
-  ['sp-form-vendor','sp-form-receive','sp-form-issue','sp-actions'].forEach(id=>{
-    document.getElementById(id).style.display='none';
-  });
+  ['sp-form-vendor','sp-form-receive','sp-form-issue','sp-actions'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById('sp-success-icon').textContent=icon;
   document.getElementById('sp-success-title').textContent=title;
   document.getElementById('sp-success-sub').textContent=sub;
   document.getElementById('sp-success').style.display='';
 }
 
-function spSaveAndUpdate(id, updates) {
-  const data=JSON.parse(localStorage.getItem('fe_data')||'[]');
-  const idx=data.findIndex(x=>x.id===id);
-  if(idx<0) return false;
-  Object.assign(data[idx], updates);
-  localStorage.setItem('fe_data', JSON.stringify(data));
-  return data[idx];
+async function spSaveAndUpdate(fsId, updates) {
+  await updateDoc(doc(_db,'extinguishers',fsId), {...updates, updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
 }
 
 function spToast(msg, ok) {
-  // Simple inline toast for scan page
   const t=document.createElement('div');
-  t.style.cssText=`position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:${ok?'#22c97a':'#ff4444'};color:white;padding:10px 20px;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;z-index:600;`;
+  t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:'+(ok?'#22c97a':'#ff4444')+';color:white;padding:10px 20px;border-radius:8px;font-size:13px;font-family:\'DM Sans\',sans-serif;z-index:600;';
   t.textContent=msg; document.body.appendChild(t);
   setTimeout(()=>t.remove(),3000);
 }
 
-function spSubmitVendor() {
+async function spSubmitVendor() {
   const vendor=document.getElementById('spv-vendor').value.trim();
   const doRefill=document.getElementById('spv-refill').checked;
   const doHPT=document.getElementById('spv-hpt').checked;
   if(!vendor){ spToast('Enter vendor name',false); return; }
   if(!doRefill&&!doHPT){ spToast('Select at least one service type',false); return; }
   const serviceType=doRefill&&doHPT?'Refill + HPT':doRefill?'Refill':'HPT';
-  spSaveAndUpdate(_spUnitId,{
-    status:'With Vendor',
-    vendorName:vendor,
-    takenDate:document.getElementById('spv-date').value||new Date().toISOString().split('T')[0],
-    expectedReturn:document.getElementById('spv-return').value||null,
-    serviceType,
-    vendorNotes:document.getElementById('spv-notes').value
-  });
-  spShowSuccess('📦','Sent to vendor',`${serviceType} — ${vendor}`);
+  const e=window._spUnit; if(!e) return;
+  try {
+    await spSaveAndUpdate(e._fsId,{status:'With Vendor',vendorName:vendor,
+      takenDate:document.getElementById('spv-date').value||new Date().toISOString().split('T')[0],
+      expectedReturn:document.getElementById('spv-return').value||null,
+      serviceType,vendorNotes:document.getElementById('spv-notes').value});
+    spShowSuccess('📦','Sent to vendor',serviceType+' — '+vendor);
+  } catch(err) { spToast('Error: '+err.message,false); }
 }
 
-function spSubmitReceive() {
+async function spSubmitReceive() {
   const pt=document.getElementById('spr-pt').value;
   const rf=document.getElementById('spr-refill').value;
-  const recv=document.getElementById('spr-received').value;
   if(!pt||!rf){ spToast('New HPT and Refill dates are required',false); return; }
-  spSaveAndUpdate(_spUnitId,{
-    status:'Compliant',
-    ptDate:pt, refillDate:rf,
-    receivedDate:recv||new Date().toISOString().split('T')[0],
-    vendorName:document.getElementById('spr-vendor').value||undefined,
-    serviceNotes:document.getElementById('spr-notes').value,
-    takenDate:null, expectedReturn:null
-  });
-  spShowSuccess('✅','Marked as Compliant',`New HPT: ${pt} · Refill: ${rf}`);
+  const e=window._spUnit; if(!e) return;
+  try {
+    await spSaveAndUpdate(e._fsId,{status:'Compliant',ptDate:pt,refillDate:rf,
+      receivedDate:document.getElementById('spr-received').value||new Date().toISOString().split('T')[0],
+      vendorName:document.getElementById('spr-vendor').value||e.vendorName,
+      serviceNotes:document.getElementById('spr-notes').value,takenDate:null,expectedReturn:null});
+    spShowSuccess('✅','Marked as Compliant','New HPT: '+pt+' · Refill: '+rf);
+  } catch(err) { spToast('Error: '+err.message,false); }
 }
 
-function spSubmitIssue() {
+async function spSubmitIssue() {
   const type=document.getElementById('spi-type').value;
   const reporter=document.getElementById('spi-reporter').value.trim();
   const missing=[];
-  document.querySelectorAll('#spi-checklist input:checked').forEach(cb=>{
-    missing.push(cb.closest('label').textContent.trim());
-  });
-  const issue={
-    id:Date.now(), unitId:_spUnitId,
-    type, missing,
-    notes:document.getElementById('spi-notes').value,
-    reporter:reporter||'Field user',
+  document.querySelectorAll('#spi-checklist input:checked').forEach(cb=>missing.push(cb.closest('label').textContent.trim()));
+  const e=window._spUnit; if(!e) return;
+  const issue={id:Date.now(),unitId:_spUnitId,type,missing,
+    notes:document.getElementById('spi-notes').value,reporter:reporter||'Field user',
     severity:document.getElementById('spi-severity').value,
-    date:new Date().toISOString().split('T')[0],
-    status:'Open'
-  };
-  const iss=JSON.parse(localStorage.getItem('fe_issues')||'[]');
-  iss.push(issue);
-  localStorage.setItem('fe_issues',JSON.stringify(iss));
-  // Update unit status
-  spSaveAndUpdate(_spUnitId,{status:'Issue Reported'});
-  spShowSuccess('⚠️','Issue reported',`${type} — ${issue.severity} severity`);
+    date:new Date().toISOString().split('T')[0],status:'Open'};
+  try {
+    await addDoc(collection(_db,'issues'),{...issue,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+    await spSaveAndUpdate(e._fsId,{status:'Issue Reported'});
+    spShowSuccess('⚠️','Issue reported',type+' — '+issue.severity+' severity');
+  } catch(err) { spToast('Error: '+err.message,false); }
+}
+
+/* ============================================================
+   AUTH — FIREBASE AUTH + ROLE VIA FIRESTORE users collection
+   ============================================================ */
+const ROLE_NAV = {
+  admin:   ['dashboard','assets','alerts','vendor','issues','admin','register','bulk'],
+  manager: ['dashboard','assets','alerts','vendor','issues'],
+  vendor:  ['vendor','assets','alerts'],
+  viewer:  ['dashboard','assets','alerts'],
+};
+const ROLE_LABEL = { admin:'System Admin', manager:'Site Manager', vendor:'Vendor', viewer:'Viewer' };
+
+let _currentUser = null;  // { uid, email, name, role, avatar, color }
+
+async function fetchUserProfile(uid) {
+  try {
+    const snap = await _db.collection('users').doc(uid).get();
+    if(snap.exists) return snap.data();
+  } catch(e) { console.warn('No user profile:', e); }
+  return null;
+}
+
+function authInit() {
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('scan')) { spInit(); return; }
+
+  // Config is hardcoded — init Firebase directly
+  try { initFirebase(_FIREBASE_CONFIG); } catch(e) {
+    document.body.innerHTML = '<div style="color:red;padding:40px;font-family:sans-serif;">Firebase init failed: '+e.message+'</div>';
+    return;
+  }
+
+  document.querySelector('.app').style.display='none';
+  document.getElementById('login-page').style.display='flex';
+
+  _auth.onAuthStateChanged(async fbUser => {
+    if(fbUser) {
+      let profile = await fetchUserProfile(fbUser.uid);
+
+      if(!profile) {
+        profile = { name: fbUser.email, role:'viewer', status:'pending' };
+      }
+
+      if(profile.status === 'pending') {
+        document.querySelector('.app').style.display='none';
+        document.getElementById('login-page').style.display='flex';
+        switchAuthTab('signup');
+        document.getElementById('signup-form-wrap').style.display='none';
+        document.getElementById('signup-pending').style.display='none';
+        document.getElementById('signup-blocked').style.display='';
+        return;
+      }
+
+      _currentUser = {
+        uid: fbUser.uid,
+        email: fbUser.email,
+        name: profile.name || fbUser.email,
+        role: profile.role || 'viewer',
+        avatar: (profile.name||fbUser.email).substring(0,2).toUpperCase(),
+        color: ({admin:'var(--purple)',manager:'var(--amber)',vendor:'var(--blue)',viewer:'var(--green)'})[profile.role]||'var(--text3)'
+      };
+      showApp();
+    } else {
+      _currentUser = null;
+      document.querySelector('.app').style.display='none';
+      document.getElementById('login-page').style.display='flex';
+    }
+  });
+}
+
+async function doLogin() {
+  const email = (document.getElementById('login-username').value||'').trim();
+  const pass   = document.getElementById('login-password').value||'';
+  const errEl  = document.getElementById('login-error');
+  const btn    = document.querySelector('.login-btn');
+
+  if(!email||!pass) { errEl.textContent='Please enter email and password.'; errEl.style.display='block'; return; }
+
+  btn.textContent='Signing in…'; btn.disabled=true;
+  try {
+    await _auth.signInWithEmailAndPassword(email, pass);
+    errEl.style.display='none';
+    // onAuthStateChanged handles the rest
+  } catch(err) {
+    errEl.textContent = err.code==='auth/invalid-credential'||err.code==='auth/user-not-found'||err.code==='auth/wrong-password'
+      ? 'Incorrect email or password. Please try again.'
+      : `Error: ${err.message}`;
+    errEl.style.display='block';
+    document.getElementById('login-password').value='';
+    const box=document.querySelector('.login-box');
+    box.style.animation='none'; setTimeout(()=>{ box.style.animation='shake 0.3s ease'; },10);
+  } finally { btn.textContent='Sign In →'; btn.disabled=false; }
+}
+
+function showApp() {
+  document.getElementById('login-page').style.display='none';
+  document.querySelector('.app').style.display='flex';
+  applyRoleUI();
+  startListeners();
+  autoCheckDates();
+  updateNavBadges();
+  populateDashboardFilters();
+  renderDashboard();
+}
+
+function applyRoleUI() {
+  const role=_currentUser.role;
+  const allowed=ROLE_NAV[role]||[];
+  document.querySelector('.user-avatar').textContent=_currentUser.avatar;
+  document.querySelector('.user-avatar').style.background=_currentUser.color;
+  document.querySelector('.user-name').textContent=_currentUser.name;
+  document.querySelector('.user-role').textContent=ROLE_LABEL[role]||role;
+  const pageMap=['dashboard','assets','alerts','vendor','issues','admin','register','bulk'];
+  document.querySelectorAll('.nav-item').forEach((el,i)=>{
+    const page=pageMap[i]; if(page) el.style.display=allowed.includes(page)?'':'none';
+  });
+  if(role!=='admin'&&role!=='manager') {
+    const addBtn=document.querySelector('.topbar-actions .btn:first-child'); if(addBtn) addBtn.style.display='none';
+  }
+  const firstPage=allowed[0]||'dashboard'; showPage(firstPage);
+}
+
+async function doLogout() {
+  if(_unsubFE)     { _unsubFE(); _unsubFE=null; }
+  if(_unsubIssues) { _unsubIssues(); _unsubIssues=null; }
+  _currentUser=null; extinguishers=[]; issues=[];
+  await _auth.signOut();
+  document.querySelector('.app').style.display='none';
+  document.getElementById('login-page').style.display='flex';
+  document.getElementById('login-username').value='';
+  document.getElementById('login-password').value='';
+  document.getElementById('login-error').style.display='none';
+}
+
+function fillLogin(u,p) {
+  document.getElementById('login-username').value=u;
+  document.getElementById('login-password').value=p;
+  document.getElementById('login-error').style.display='none';
+}
+
+/* ── Auth tab switching ── */
+function switchAuthTab(tab) {
+  const isSignin = tab === 'signin';
+  document.getElementById('panel-signin').style.display = isSignin ? '' : 'none';
+  document.getElementById('panel-signup').style.display = isSignin ? 'none' : '';
+  document.getElementById('tab-signin').style.background = isSignin ? 'var(--bg2)' : 'transparent';
+  document.getElementById('tab-signin').style.color = isSignin ? 'var(--text)' : 'var(--text3)';
+  document.getElementById('tab-signin').style.boxShadow = isSignin ? '0 1px 4px rgba(0,0,0,0.3)' : 'none';
+  document.getElementById('tab-signup').style.background = !isSignin ? 'var(--bg2)' : 'transparent';
+  document.getElementById('tab-signup').style.color = !isSignin ? 'var(--text)' : 'var(--text3)';
+  document.getElementById('tab-signup').style.boxShadow = !isSignin ? '0 1px 4px rgba(0,0,0,0.3)' : 'none';
+}
+
+/* ── Check if first user (no admin exists yet) ── */
+async function isFirstUser() {
+  try {
+    const snap = await _db.collection('users').get();
+    return snap.empty;
+  } catch(e) { return false; }
+}
+
+/* ── Sign Up ── */
+async function doSignup() {
+  const name    = (document.getElementById('signup-name').value||'').trim();
+  const email   = (document.getElementById('signup-email').value||'').trim();
+  const pass    = document.getElementById('signup-password').value||'';
+  const confirm = document.getElementById('signup-confirm').value||'';
+  const role    = document.getElementById('signup-role').value;
+  const org     = (document.getElementById('signup-org').value||'').trim();
+  const errEl   = document.getElementById('signup-error');
+
+  errEl.style.display='none';
+  if(!name||!email||!pass){ errEl.textContent='Please fill all required fields.'; errEl.style.display='block'; return; }
+  if(pass.length<8){ errEl.textContent='Password must be at least 8 characters.'; errEl.style.display='block'; return; }
+  if(pass!==confirm){ errEl.textContent='Passwords do not match.'; errEl.style.display='block'; return; }
+
+  const btn=document.getElementById('signup-btn');
+  btn.textContent='Submitting…'; btn.disabled=true;
+
+  try {
+    const firstUser = await isFirstUser();
+
+    // Create Firebase Auth account
+    const cred = await _auth.createUserWithEmailAndPassword(email, pass);
+    const uid  = cred.user.uid;
+
+    if(firstUser) {
+      // First ever user → auto-approve as admin
+      await _db.collection('users').doc(uid).set({
+        name, email, role:'admin', org, status:'approved',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(), approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        approvedBy:'system'
+      });
+      // onAuthStateChanged will fire and log them in
+      toast('Welcome! You are the first admin.', 'success');
+    } else {
+      // Subsequent users → create profile as pending
+      await _db.collection('users').doc(uid).set({
+        name, email, role, org, status:'pending',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(), requestedRole: role
+      });
+      // Sign them out immediately — they need approval first
+      await _auth.signOut();
+      document.getElementById('signup-form-wrap').style.display='none';
+      document.getElementById('signup-pending-msg').textContent =
+        `Request submitted for ${email}. An admin will review your request.`;
+      document.getElementById('signup-pending').style.display='';
+      toast('Request submitted — awaiting admin approval');
+    }
+  } catch(err) {
+    let msg = err.message;
+    if(err.code==='auth/email-already-in-use') msg='This email is already registered. Try signing in.';
+    if(err.code==='auth/invalid-email') msg='Please enter a valid email address.';
+    errEl.textContent=msg; errEl.style.display='block';
+  } finally { btn.textContent='Submit Request →'; btn.disabled=false; }
+}
+
+/* ── Admin: load pending users ── */
+let _unsubUsers = null;
+async function loadPendingUsers() {
+  const container = document.getElementById('admin-pending-users');
+  const activeContainer = document.getElementById('admin-active-users');
+  const countBadge = document.getElementById('admin-pending-count');
+  const banner = document.getElementById('admin-pending-banner');
+  if(!container) return;
+
+  try {
+    const snap = await _db.collection('users').get();
+    const allUsers = snap.docs.map(d=>({...d.data(), _fsId:d.id}));
+    const pending  = allUsers.filter(u=>u.status==='pending');
+    const active   = allUsers.filter(u=>u.status==='approved');
+
+    // Pending count badge
+    if(pending.length>0) {
+      countBadge.textContent = pending.length+' pending';
+      banner.style.display='';
+      banner.innerHTML=`<div class="alert-banner danger">🔔 ${pending.length} user${pending.length!==1?'s':''} waiting for approval — see Admin panel.</div>`;
+    } else {
+      countBadge.textContent='';
+      banner.style.display='none';
+    }
+
+    // Pending users list
+    container.innerHTML = pending.length===0
+      ? '<div class="card-body" style="color:var(--text3);font-size:12px;text-align:center;padding:20px;">No pending requests ✓</div>'
+      : pending.map(u=>`
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px;">
+          <div style="width:34px;height:34px;border-radius:50%;background:var(--amber);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:white;flex-shrink:0;">${(u.name||u.email).substring(0,2).toUpperCase()}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:500;color:var(--text);">${u.name||'—'}</div>
+            <div style="font-size:11px;color:var(--text3);">${u.email}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px;">
+              Requested: <strong style="color:var(--text2);">${u.requestedRole||u.role}</strong>
+              ${u.org?` · ${u.org}`:''}
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+            <div style="display:flex;gap:6px;">
+              <select id="role-sel-${u._fsId}" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;">
+                <option value="viewer" ${u.requestedRole==='viewer'?'selected':''}>Viewer</option>
+                <option value="vendor" ${u.requestedRole==='vendor'?'selected':''}>Vendor</option>
+                <option value="manager" ${u.requestedRole==='manager'?'selected':''}>Manager</option>
+                <option value="admin" ${u.requestedRole==='admin'?'selected':''}>Admin</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button onclick="approveUser('${u._fsId}')" class="btn sm green" style="flex:1;">✓ Approve</button>
+              <button onclick="rejectUser('${u._fsId}','${u.email}')" class="btn sm red" style="flex:1;">✕ Reject</button>
+            </div>
+          </div>
+        </div>`).join('');
+
+    // Active users list
+    if(activeContainer) {
+      activeContainer.innerHTML = active.length===0
+        ? '<div class="card-body" style="color:var(--text3);font-size:12px;text-align:center;padding:20px;">No active users</div>'
+        : active.map(u=>`
+          <div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+            <div style="width:30px;height:30px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:white;flex-shrink:0;">${(u.name||u.email).substring(0,2).toUpperCase()}</div>
+            <div style="flex:1;">
+              <div style="font-size:12px;font-weight:500;">${u.name||'—'}</div>
+              <div style="font-size:11px;color:var(--text3);">${u.email}</div>
+            </div>
+            <span class="badge ${({admin:'red',manager:'amber',vendor:'blue',viewer:'green'})[u.role]||'gray'}">${u.role}</span>
+            ${u._fsId !== (_currentUser&&_currentUser.uid) ? `<button onclick="changeUserRole('${u._fsId}',this)" class="btn ghost sm" title="Change role">✏</button>` : '<span style="font-size:10px;color:var(--text3);">(you)</span>'}
+          </div>`).join('');
+    }
+  } catch(err) {
+    if(container) container.innerHTML='<div class="card-body" style="color:var(--red);font-size:12px;padding:16px;">Error loading users: '+err.message+'</div>';
+  }
+}
+
+async function approveUser(fsId) {
+  const sel = document.getElementById('role-sel-'+fsId);
+  const role = sel ? sel.value : 'viewer';
+  try {
+    await _db.collection('users').doc(fsId).update({
+      status:'approved', role,
+      approvedAt:firebase.firestore.FieldValue.serverTimestamp(),
+      approvedBy:_currentUser ? _currentUser.email : 'admin'
+    });
+    toast('User approved as '+role);
+    loadPendingUsers();
+    updateNavBadges();
+  } catch(err) { toast('Error: '+err.message,'error'); }
+}
+
+async function rejectUser(fsId, email) {
+  if(!confirm('Reject and delete account for '+email+'?')) return;
+  try {
+    await _db.collection('users').doc(fsId).delete();
+    toast('User rejected — account removed');
+    loadPendingUsers();
+  } catch(err) { toast('Error: '+err.message,'error'); }
+}
+
+async function changeUserRole(fsId, btn) {
+  const newRole = prompt('Enter new role (admin, manager, vendor, viewer):');
+  if(!newRole||!['admin','manager','vendor','viewer'].includes(newRole.trim().toLowerCase())) {
+    toast('Invalid role','error'); return;
+  }
+  try {
+    await _db.collection('users').doc(fsId).update({role:newRole.trim().toLowerCase()});
+    toast('Role updated to '+newRole);
+    loadPendingUsers();
+  } catch(err) { toast('Error: '+err.message,'error'); }
+}
+
+function togglePassVis(inputId, btnId) {
+  const inp=document.getElementById(inputId||'login-password');
+  const eye=document.getElementById(btnId||'pass-eye');
+  if(!inp) return;
+  inp.type=inp.type==='password'?'text':'password';
+  if(eye) eye.textContent=inp.type==='password'?'👁':'🙈';
+}
+  const inp=document.getElementById('login-password');
+  const eye=document.getElementById('pass-eye');
+  inp.type=inp.type==='password'?'text':'password';
+  eye.textContent=inp.type==='password'?'👁':'🙈';
+}
+
+/* ============================================================
+   FIREBASE SETUP SCREEN
+   ============================================================ */
+function showSetupScreen(msg) {
+  document.querySelector('.app').style.display='none';
+  document.getElementById('login-page').style.display='none';
+  let setup=document.getElementById('setup-screen');
+  if(!setup){
+    setup=document.createElement('div');
+    setup.id='setup-screen';
+    setup.style.cssText='position:fixed;inset:0;z-index:2000;background:var(--bg);display:flex;align-items:center;justify-content:center;font-family:"DM Sans",sans-serif;overflow-y:auto;padding:20px;';
+    setup.innerHTML=`
+      <div style="width:520px;max-width:100%;">
+        <div style="text-align:center;margin-bottom:28px;">
+          <div style="width:52px;height:52px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 12px;box-shadow:0 8px 24px rgba(255,85,51,0.4);">🔥</div>
+          <div style="font-size:20px;font-weight:600;color:var(--text);">FireGuard — Firebase Setup</div>
+          <div style="font-size:13px;color:var(--text3);margin-top:4px;">Connect your Firebase project to get started</div>
+        </div>
+        ${msg?`<div style="padding:10px 14px;background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.3);border-radius:8px;color:var(--red);font-size:13px;margin-bottom:16px;">${msg}</div>`:''}
+        <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:28px;">
+          <div style="font-size:12px;color:var(--text3);margin-bottom:18px;line-height:1.7;">
+            Go to <strong style="color:var(--text);">console.firebase.google.com</strong> → your project → Project Settings → Your apps → Web app → copy the <code>firebaseConfig</code> object values below.
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            ${['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId'].map(k=>`
+            <div style="grid-column:${k==='apiKey'||k==='appId'?'1/-1':''};">
+              <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;font-weight:500;margin-bottom:5px;">${k}</div>
+              <input id="fb-${k}" placeholder="${k}" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:7px;padding:9px 11px;font-size:13px;font-family:'DM Mono',monospace;outline:none;box-sizing:border-box;">
+            </div>`).join('')}
+          </div>
+          <button onclick="saveSetup()" style="width:100%;margin-top:18px;padding:13px;background:var(--accent);border:none;border-radius:8px;color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">
+            Save & Connect →
+          </button>
+          <div style="margin-top:14px;font-size:11px;color:var(--text3);text-align:center;">
+            Your config is saved in browser localStorage. It never leaves your device.
+          </div>
+        </div>
+
+        <div style="margin-top:20px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:12px;">📋 Firebase setup checklist</div>
+          <div style="font-size:12px;color:var(--text2);line-height:2;">
+            1. Create a Firebase project at <strong style="color:var(--text);">console.firebase.google.com</strong><br>
+            2. Enable <strong style="color:var(--text);">Authentication → Email/Password</strong><br>
+            3. Create <strong style="color:var(--text);">Firestore Database</strong> in production mode<br>
+            4. Add Firestore security rules (see README)<br>
+            5. Create users in Authentication, then add their <strong style="color:var(--text);">uid</strong> as a document in the <code>users</code> collection with <code>{ name, role }</code><br>
+            6. Paste your <code>firebaseConfig</code> values above
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(setup);
+  }
+  setup.style.display='flex';
+}
+
+function saveSetup() {
+  const fields=['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId'];
+  const cfg={};
+  for(const f of fields){
+    const v=(document.getElementById('fb-'+f).value||'').trim();
+    if(!v){ toast('Please fill all fields','error'); return; }
+    cfg[f]=v;
+  }
+  saveFirebaseConfig(cfg);
+  document.getElementById('setup-screen').style.display='none';
+  try {
+    initFirebase(cfg);
+    document.getElementById('login-page').style.display='flex';
+    _auth.onAuthStateChanged(async fbUser => {
+      if(fbUser){
+        let profile=await fetchUserProfile(fbUser.uid);
+        if(!profile) profile={name:fbUser.email,role:'viewer'};
+        _currentUser={uid:fbUser.uid,email:fbUser.email,name:profile.name||fbUser.email,role:profile.role||'viewer',
+          avatar:(profile.name||fbUser.email).substring(0,2).toUpperCase(),color:'var(--purple)'};
+        showApp();
+      }
+    });
+    toast('Firebase connected! Sign in to continue.');
+  } catch(e) { showSetupScreen('Connection failed: '+e.message); }
+}
+
+function reconfigureFirebase() {
+  localStorage.removeItem('fg_firebase_config');
+  showSetupScreen();
 }
 
 /* ============================================================
    INIT
    ============================================================ */
 autoCheckDates();
-updateNavBadges();
-populateDashboardFilters();
-renderDashboard();
-spInit(); // activate scan page if ?scan= param present
+authInit();
+spInit();
 </script>
 <!-- ═══ MOBILE SCAN ACTION PAGE ═══ -->
 <div id="scan-page" style="display:none;position:fixed;inset:0;z-index:500;background:#0f1117;overflow-y:auto;font-family:'DM Sans',sans-serif;">
