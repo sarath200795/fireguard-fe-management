@@ -240,8 +240,9 @@ tbody tr.selected-row { background: rgba(255,85,51,0.06) !important; }
 .bulk-row-err td:first-child { border-left:3px solid var(--red); }
 .bulk-row-err { background:rgba(255,68,68,0.04); }
 
-/* LOGIN PAGE */
-.login-page { position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center; }
+/* LOGIN PAGE — visible by default until JS hides it */
+#login-page { display: flex; }
+#app-load-error { display:none;position:fixed;inset:0;z-index:2000;background:var(--bg);align-items:center;justify-content:center;font-family:'DM Sans',sans-serif; }
 .login-card { width:420px;max-width:calc(100vw - 32px); }
 .login-logo { display:flex;align-items:center;gap:12px;margin-bottom:32px;justify-content:center; }
 .login-logo-icon { width:48px;height:48px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 8px 24px rgba(255,85,51,0.4); }
@@ -272,7 +273,8 @@ tbody tr.selected-row { background: rgba(255,85,51,0.06) !important; }
 
 <!-- ═══ LOGIN / SIGNUP PAGE ═══ -->
 <div class="login-page" id="login-page">
-  <div class="login-card">
+  <div class="login-card" style="width:460px;max-width:calc(100vw - 32px);">
+
     <div class="login-logo">
       <div class="login-logo-icon">🔥</div>
       <div>
@@ -281,7 +283,7 @@ tbody tr.selected-row { background: rgba(255,85,51,0.06) !important; }
       </div>
     </div>
 
-    <!-- Tab toggle -->
+    <!-- Tabs -->
     <div style="display:flex;gap:0;background:var(--bg3);border-radius:10px;padding:4px;margin-bottom:20px;">
       <button id="tab-signin" onclick="switchAuthTab('signin')"
         style="flex:1;padding:9px;border:none;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;background:var(--bg2);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.3);transition:all 0.15s;">
@@ -291,20 +293,24 @@ tbody tr.selected-row { background: rgba(255,85,51,0.06) !important; }
         style="flex:1;padding:9px;border:none;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;background:transparent;color:var(--text3);transition:all 0.15s;">
         Sign Up
       </button>
+      <button id="tab-register" onclick="switchAuthTab('register')"
+        style="flex:1;padding:9px;border:none;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;background:transparent;color:var(--text3);transition:all 0.15s;">
+        New Org
+      </button>
     </div>
 
-    <!-- ── SIGN IN PANEL ── -->
+    <!-- ── SIGN IN ── -->
     <div id="panel-signin">
       <div class="login-box">
         <div class="login-title">Welcome back</div>
-        <div class="login-sub">Sign in with your FireGuard account</div>
+        <div class="login-sub">Sign in to your organisation account</div>
         <div class="login-error" id="login-error"></div>
         <div class="login-group">
-          <label>Email</label>
+          <label>Email *</label>
           <input type="email" id="login-username" placeholder="you@company.com" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="email">
         </div>
         <div class="login-group">
-          <label>Password</label>
+          <label>Password *</label>
           <div class="pass-wrap">
             <input type="password" id="login-password" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="current-password">
             <button class="pass-toggle" onclick="togglePassVis('login-password','pass-eye')" tabindex="-1" id="pass-eye">👁</button>
@@ -312,25 +318,27 @@ tbody tr.selected-row { background: rgba(255,85,51,0.06) !important; }
         </div>
         <button class="login-btn" onclick="doLogin()" id="signin-btn">Sign In →</button>
         <div style="margin-top:14px;text-align:center;font-size:12px;color:var(--text3);">
-          No account? <span onclick="switchAuthTab('signup')" style="color:var(--accent);cursor:pointer;text-decoration:underline;">Request access →</span>
+          New user? <span onclick="switchAuthTab('signup')" style="color:var(--accent);cursor:pointer;text-decoration:underline;">Request access →</span>
+          &nbsp;·&nbsp;
+          <span onclick="switchAuthTab('register')" style="color:var(--accent);cursor:pointer;text-decoration:underline;">Register new org →</span>
         </div>
       </div>
     </div>
 
-    <!-- ── SIGN UP PANEL ── -->
+    <!-- ── SIGN UP (request access to existing org) ── -->
     <div id="panel-signup" style="display:none;">
-      <div class="login-box">
+      <div class="login-box" style="max-height:70vh;overflow-y:auto;">
         <div id="signup-form-wrap">
           <div class="login-title">Request Access</div>
-          <div class="login-sub">Submit your details — an admin will approve your account</div>
+          <div class="login-sub">Your admin will approve your account before you can sign in</div>
           <div class="login-error" id="signup-error"></div>
           <div class="login-group">
             <label>Full Name *</label>
-            <input type="text" id="signup-name" placeholder="Your full name" autocomplete="name">
+            <input type="text" id="signup-name" placeholder="Your full name">
           </div>
           <div class="login-group">
             <label>Email *</label>
-            <input type="email" id="signup-email" placeholder="you@company.com" autocomplete="email">
+            <input type="email" id="signup-email" placeholder="you@company.com">
           </div>
           <div class="login-group">
             <label>Password *</label>
@@ -344,39 +352,105 @@ tbody tr.selected-row { background: rgba(255,85,51,0.06) !important; }
             <input type="password" id="signup-confirm" placeholder="Re-enter password">
           </div>
           <div class="login-group">
-            <label>Role Requested</label>
-            <select id="signup-role" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:11px 14px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;">
-              <option value="viewer">Viewer — read-only access</option>
-              <option value="vendor">Vendor — vendor operations</option>
-              <option value="manager">Manager — site management</option>
-              <option value="admin">Admin — full access</option>
+            <label>Organisation *</label>
+            <select id="signup-org-select" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:11px 14px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;">
+              <option value="">Loading organisations…</option>
             </select>
           </div>
           <div class="login-group">
-            <label>Organisation / Site</label>
-            <input type="text" id="signup-org" placeholder="Your site or department">
+            <label>Role Requested</label>
+            <select id="signup-role" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:11px 14px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;">
+              <option value="viewer">Viewer — read only</option>
+              <option value="vendor">Vendor — vendor operations</option>
+              <option value="manager">Manager — site management</option>
+            </select>
           </div>
           <button class="login-btn" onclick="doSignup()" id="signup-btn">Submit Request →</button>
           <div style="margin-top:14px;text-align:center;font-size:12px;color:var(--text3);">
             Already have an account? <span onclick="switchAuthTab('signin')" style="color:var(--accent);cursor:pointer;text-decoration:underline;">Sign in →</span>
           </div>
         </div>
-
-        <!-- Pending state shown after signup -->
         <div id="signup-pending" style="display:none;text-align:center;padding:20px 0;">
-          <div style="font-size:48px;margin-bottom:16px;">⏳</div>
-          <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:8px;">Request submitted!</div>
+          <div style="font-size:48px;margin-bottom:12px;">⏳</div>
+          <div style="font-size:16px;font-weight:600;margin-bottom:8px;">Request submitted!</div>
           <div style="font-size:13px;color:var(--text2);margin-bottom:6px;" id="signup-pending-msg"></div>
           <div style="font-size:12px;color:var(--text3);">You'll be able to sign in once an admin approves your account.</div>
           <button onclick="switchAuthTab('signin')" class="login-btn" style="margin-top:20px;background:var(--bg3);color:var(--text);">← Back to Sign In</button>
         </div>
-
-        <!-- Blocked state — signed up but not approved -->
         <div id="signup-blocked" style="display:none;text-align:center;padding:20px 0;">
-          <div style="font-size:48px;margin-bottom:16px;">🔒</div>
-          <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:8px;">Awaiting Approval</div>
-          <div style="font-size:13px;color:var(--text2);margin-bottom:16px;">Your account exists but hasn't been approved yet. Please contact an administrator.</div>
+          <div style="font-size:48px;margin-bottom:12px;">🔒</div>
+          <div style="font-size:16px;font-weight:600;margin-bottom:8px;">Awaiting Approval</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:16px;">Your account hasn't been approved yet. Contact your admin.</div>
           <button onclick="doLogout()" style="padding:10px 20px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;">Sign out</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REGISTER NEW ORGANISATION ── -->
+    <div id="panel-register" style="display:none;">
+      <div class="login-box" style="max-height:70vh;overflow-y:auto;">
+        <div id="register-org-form-wrap">
+          <div class="login-title">Register Organisation</div>
+          <div class="login-sub">Create a new organisation — you'll be the admin</div>
+          <div class="login-error" id="register-error"></div>
+
+          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin:0 0 10px;font-weight:500;">Organisation Details</div>
+          <div class="login-group">
+            <label>Organisation Name *</label>
+            <input type="text" id="reg-org-name" placeholder="e.g. Cult Fitness India">
+          </div>
+          <div class="login-group">
+            <label>Industry / Type</label>
+            <select id="reg-org-type" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:11px 14px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;">
+              <option>Fitness / Gym</option>
+              <option>Manufacturing</option>
+              <option>Warehouse / Logistics</option>
+              <option>Healthcare</option>
+              <option>Retail</option>
+              <option>Data Centre</option>
+              <option>Corporate Office</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="login-group">
+            <label>Number of Sites</label>
+            <input type="number" id="reg-org-sites" placeholder="e.g. 700" min="1">
+          </div>
+
+          <div style="height:1px;background:var(--border);margin:16px 0;"></div>
+          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin:0 0 10px;font-weight:500;">Admin Account</div>
+
+          <div class="login-group">
+            <label>Your Full Name *</label>
+            <input type="text" id="reg-admin-name" placeholder="Admin name">
+          </div>
+          <div class="login-group">
+            <label>Admin Email *</label>
+            <input type="email" id="reg-admin-email" placeholder="admin@company.com">
+          </div>
+          <div class="login-group">
+            <label>Password *</label>
+            <div class="pass-wrap">
+              <input type="password" id="reg-admin-pass" placeholder="Min 8 characters">
+              <button class="pass-toggle" onclick="togglePassVis('reg-admin-pass','reg-pass-eye')" tabindex="-1" id="reg-pass-eye">👁</button>
+            </div>
+          </div>
+          <div class="login-group">
+            <label>Confirm Password *</label>
+            <input type="password" id="reg-admin-confirm" placeholder="Re-enter password">
+          </div>
+
+          <button class="login-btn" onclick="doRegisterOrg()" id="register-org-btn">Create Organisation →</button>
+          <div style="margin-top:14px;text-align:center;font-size:12px;color:var(--text3);">
+            Already registered? <span onclick="switchAuthTab('signin')" style="color:var(--accent);cursor:pointer;text-decoration:underline;">Sign in →</span>
+          </div>
+        </div>
+
+        <div id="register-org-success" style="display:none;text-align:center;padding:20px 0;">
+          <div style="font-size:48px;margin-bottom:12px;">🎉</div>
+          <div style="font-size:16px;font-weight:600;margin-bottom:8px;">Organisation Created!</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:6px;" id="register-org-success-msg"></div>
+          <div style="font-size:12px;color:var(--text3);">Signing you in as admin…</div>
         </div>
       </div>
     </div>
@@ -384,7 +458,7 @@ tbody tr.selected-row { background: rgba(255,85,51,0.06) !important; }
   </div>
 </div>
 
-<div class="app">
+<div class="app" style="display:none;">
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
@@ -1752,7 +1826,35 @@ tbody tr.selected-row { background: rgba(255,85,51,0.06) !important; }
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- Firebase load check — shows error if blocked by file:// -->
+<div id="app-load-error">
+  <div style="max-width:480px;text-align:center;padding:32px;">
+    <div style="font-size:48px;margin-bottom:16px;">⚠️</div>
+    <div style="font-size:18px;font-weight:600;color:#e8eaf0;margin-bottom:12px;">Cannot open from file://</div>
+    <div style="font-size:14px;color:#9099b0;line-height:1.8;margin-bottom:24px;">
+      Firebase is blocked when opening HTML files directly.<br>
+      You need to serve it over HTTP.
+    </div>
+    <div style="background:#1e2130;border-radius:10px;padding:20px;text-align:left;font-size:13px;color:#9099b0;">
+      <div style="color:#e8eaf0;font-weight:600;margin-bottom:12px;">Quick fix — open Command Prompt and run:</div>
+      <div style="background:#0f1117;border-radius:6px;padding:12px;font-family:monospace;color:#22c97a;margin-bottom:8px;">cd Downloads</div>
+      <div style="background:#0f1117;border-radius:6px;padding:12px;font-family:monospace;color:#22c97a;margin-bottom:12px;">python -m http.server 8080</div>
+      <div style="color:#e8eaf0;font-weight:600;margin-bottom:8px;">Then open in browser:</div>
+      <div style="background:#0f1117;border-radius:6px;padding:12px;font-family:monospace;color:#4d9fff;">http://localhost:8080/index.html</div>
+    </div>
+  </div>
+</div>
+
 <script>
+// Check if Firebase loaded — if not, show the error screen
+window.addEventListener('DOMContentLoaded', function() {
+  if(typeof firebase === 'undefined') {
+    document.getElementById('app-load-error').style.display = 'flex';
+    document.getElementById('login-page').style.display = 'none';
+  }
+});
+</script>
 /* ============================================================
    FIREBASE CONFIG
    ============================================================ */
@@ -4392,7 +4494,7 @@ async function spSubmitIssue() {
 }
 
 /* ============================================================
-   AUTH — FIREBASE AUTH + ROLE VIA FIRESTORE users collection
+   AUTH — MULTI-ORGANISATION FIREBASE AUTH
    ============================================================ */
 const ROLE_NAV = {
   admin:   ['dashboard','assets','alerts','vendor','issues','admin','register','bulk'],
@@ -4402,7 +4504,8 @@ const ROLE_NAV = {
 };
 const ROLE_LABEL = { admin:'System Admin', manager:'Site Manager', vendor:'Vendor', viewer:'Viewer' };
 
-let _currentUser = null;  // { uid, email, name, role, avatar, color }
+let _currentUser = null;
+let _currentOrg  = null;
 
 async function fetchUserProfile(uid) {
   try {
@@ -4412,11 +4515,18 @@ async function fetchUserProfile(uid) {
   return null;
 }
 
+async function fetchOrg(orgId) {
+  try {
+    const snap = await _db.collection('organisations').doc(orgId).get();
+    if(snap.exists) return {id: snap.id, ...snap.data()};
+  } catch(e) {}
+  return null;
+}
+
 function authInit() {
   const params = new URLSearchParams(window.location.search);
   if(params.get('scan')) { spInit(); return; }
 
-  // Config is hardcoded — init Firebase directly
   try { initFirebase(_FIREBASE_CONFIG); } catch(e) {
     document.body.innerHTML = '<div style="color:red;padding:40px;font-family:sans-serif;">Firebase init failed: '+e.message+'</div>';
     return;
@@ -4425,68 +4535,236 @@ function authInit() {
   document.querySelector('.app').style.display='none';
   document.getElementById('login-page').style.display='flex';
 
+  // Load org list for signup dropdown
+  loadOrgList();
+
   _auth.onAuthStateChanged(async fbUser => {
     if(fbUser) {
       let profile = await fetchUserProfile(fbUser.uid);
 
       if(!profile) {
-        profile = { name: fbUser.email, role:'viewer', status:'pending' };
+        // No profile — sign out and show login
+        await _auth.signOut();
+        document.querySelector('.app').style.display='none';
+        document.getElementById('login-page').style.display='flex';
+        return;
       }
 
       if(profile.status === 'pending') {
         document.querySelector('.app').style.display='none';
         document.getElementById('login-page').style.display='flex';
         switchAuthTab('signup');
-        document.getElementById('signup-form-wrap').style.display='none';
-        document.getElementById('signup-pending').style.display='none';
-        document.getElementById('signup-blocked').style.display='';
+        const fw = document.getElementById('signup-form-wrap');
+        const sp = document.getElementById('signup-pending');
+        const sb = document.getElementById('signup-blocked');
+        if(fw) fw.style.display='none';
+        if(sp) sp.style.display='none';
+        if(sb) sb.style.display='';
         return;
       }
 
+      // Load org
+      if(profile.orgId) {
+        _currentOrg = await fetchOrg(profile.orgId);
+      }
+
       _currentUser = {
-        uid: fbUser.uid,
+        uid:   fbUser.uid,
         email: fbUser.email,
-        name: profile.name || fbUser.email,
-        role: profile.role || 'viewer',
-        avatar: (profile.name||fbUser.email).substring(0,2).toUpperCase(),
+        name:  profile.name || fbUser.email,
+        role:  profile.role || 'viewer',
+        orgId: profile.orgId || null,
+        avatar:(profile.name||fbUser.email).substring(0,2).toUpperCase(),
         color: ({admin:'var(--purple)',manager:'var(--amber)',vendor:'var(--blue)',viewer:'var(--green)'})[profile.role]||'var(--text3)'
       };
       showApp();
     } else {
       _currentUser = null;
+      _currentOrg  = null;
       document.querySelector('.app').style.display='none';
       document.getElementById('login-page').style.display='flex';
     }
   });
 }
 
+async function loadOrgList() {
+  try {
+    const snap = await _db.collection('organisations').orderBy('name').get();
+    const sel = document.getElementById('signup-org-select');
+    if(!sel) return;
+    if(snap.empty) {
+      sel.innerHTML='<option value="">No organisations yet — register one first</option>';
+      return;
+    }
+    sel.innerHTML='<option value="">Select your organisation…</option>';
+    snap.docs.forEach(d=>{
+      const o=document.createElement('option');
+      o.value=d.id; o.textContent=d.data().name;
+      sel.appendChild(o);
+    });
+  } catch(e) { console.warn('loadOrgList error',e); }
+}
+
+/* ── Tab switching (3 tabs) ── */
+function switchAuthTab(tab) {
+  ['signin','signup','register'].forEach(t=>{
+    const panel = document.getElementById('panel-'+t);
+    const btn   = document.getElementById('tab-'+t);
+    if(!panel||!btn) return;
+    const active = t===tab;
+    panel.style.display = active ? '' : 'none';
+    btn.style.background = active ? 'var(--bg2)' : 'transparent';
+    btn.style.color      = active ? 'var(--text)' : 'var(--text3)';
+    btn.style.boxShadow  = active ? '0 1px 4px rgba(0,0,0,0.3)' : 'none';
+  });
+  if(tab==='signup') loadOrgList();
+}
+
+/* ── Sign In ── */
 async function doLogin() {
   const email = (document.getElementById('login-username').value||'').trim();
-  const pass   = document.getElementById('login-password').value||'';
-  const errEl  = document.getElementById('login-error');
-  const btn    = document.querySelector('.login-btn');
+  const pass  = document.getElementById('login-password').value||'';
+  const errEl = document.getElementById('login-error');
+  const btn   = document.getElementById('signin-btn');
 
-  if(!email||!pass) { errEl.textContent='Please enter email and password.'; errEl.style.display='block'; return; }
+  errEl.style.display='none';
+  if(!email||!pass){ errEl.textContent='Please enter email and password.'; errEl.style.display='block'; return; }
 
   btn.textContent='Signing in…'; btn.disabled=true;
   try {
     await _auth.signInWithEmailAndPassword(email, pass);
-    errEl.style.display='none';
     // onAuthStateChanged handles the rest
   } catch(err) {
-    errEl.textContent = err.code==='auth/invalid-credential'||err.code==='auth/user-not-found'||err.code==='auth/wrong-password'
-      ? 'Incorrect email or password. Please try again.'
-      : `Error: ${err.message}`;
+    const friendly = {
+      'auth/user-not-found':'No account found with this email.',
+      'auth/wrong-password':'Incorrect password. Please try again.',
+      'auth/invalid-credential':'Incorrect email or password.',
+      'auth/invalid-email':'Please enter a valid email address.',
+      'auth/too-many-requests':'Too many attempts. Please wait a moment.'
+    };
+    errEl.textContent = friendly[err.code] || err.message;
     errEl.style.display='block';
     document.getElementById('login-password').value='';
-    const box=document.querySelector('.login-box');
-    box.style.animation='none'; setTimeout(()=>{ box.style.animation='shake 0.3s ease'; },10);
   } finally { btn.textContent='Sign In →'; btn.disabled=false; }
+}
+
+/* ── Sign Up (request access to existing org) ── */
+async function doSignup() {
+  const name    = (document.getElementById('signup-name').value||'').trim();
+  const email   = (document.getElementById('signup-email').value||'').trim();
+  const pass    = document.getElementById('signup-password').value||'';
+  const confirm = document.getElementById('signup-confirm').value||'';
+  const orgId   = document.getElementById('signup-org-select').value;
+  const role    = document.getElementById('signup-role').value;
+  const errEl   = document.getElementById('signup-error');
+
+  errEl.style.display='none';
+  if(!name)  { errEl.textContent='Enter your full name.'; errEl.style.display='block'; return; }
+  if(!email) { errEl.textContent='Enter your email.'; errEl.style.display='block'; return; }
+  if(!orgId) { errEl.textContent='Select your organisation.'; errEl.style.display='block'; return; }
+  if(pass.length<8) { errEl.textContent='Password must be at least 8 characters.'; errEl.style.display='block'; return; }
+  if(pass!==confirm){ errEl.textContent='Passwords do not match.'; errEl.style.display='block'; return; }
+
+  const btn=document.getElementById('signup-btn');
+  btn.textContent='Submitting…'; btn.disabled=true;
+
+  try {
+    const cred = await _auth.createUserWithEmailAndPassword(email, pass);
+    const uid  = cred.user.uid;
+
+    await _db.collection('users').doc(uid).set({
+      name, email, role, orgId, status:'pending',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      requestedRole: role
+    });
+
+    await _auth.signOut();
+    document.getElementById('signup-form-wrap').style.display='none';
+    document.getElementById('signup-pending-msg').textContent =
+      'Request submitted for '+email+'. Your admin will review shortly.';
+    document.getElementById('signup-pending').style.display='';
+    toast('Request submitted — awaiting admin approval');
+  } catch(err) {
+    const friendly = {
+      'auth/email-already-in-use':'This email is already registered. Try signing in.',
+      'auth/invalid-email':'Please enter a valid email address.',
+      'auth/weak-password':'Password is too weak — use at least 8 characters.'
+    };
+    errEl.textContent = friendly[err.code] || err.message;
+    errEl.style.display='block';
+  } finally { btn.textContent='Submit Request →'; btn.disabled=false; }
+}
+
+/* ── Register New Organisation (first user = admin) ── */
+async function doRegisterOrg() {
+  const orgName  = (document.getElementById('reg-org-name').value||'').trim();
+  const orgType  = document.getElementById('reg-org-type').value;
+  const orgSites = document.getElementById('reg-org-sites').value;
+  const name     = (document.getElementById('reg-admin-name').value||'').trim();
+  const email    = (document.getElementById('reg-admin-email').value||'').trim();
+  const pass     = document.getElementById('reg-admin-pass').value||'';
+  const confirm  = document.getElementById('reg-admin-confirm').value||'';
+  const errEl    = document.getElementById('register-error');
+
+  errEl.style.display='none';
+  if(!orgName) { errEl.textContent='Enter your organisation name.'; errEl.style.display='block'; return; }
+  if(!name)    { errEl.textContent='Enter your full name.'; errEl.style.display='block'; return; }
+  if(!email)   { errEl.textContent='Enter your email.'; errEl.style.display='block'; return; }
+  if(pass.length<8) { errEl.textContent='Password must be at least 8 characters.'; errEl.style.display='block'; return; }
+  if(pass!==confirm){ errEl.textContent='Passwords do not match.'; errEl.style.display='block'; return; }
+
+  const btn=document.getElementById('register-org-btn');
+  btn.textContent='Creating…'; btn.disabled=true;
+
+  try {
+    // 1. Create Firebase Auth account
+    const cred = await _auth.createUserWithEmailAndPassword(email, pass);
+    const uid  = cred.user.uid;
+
+    // 2. Create organisation document
+    const orgRef = await _db.collection('organisations').add({
+      name: orgName, type: orgType,
+      sites: parseInt(orgSites)||0,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdBy: uid, adminUid: uid
+    });
+    const orgId = orgRef.id;
+
+    // 3. Create user profile as admin — auto-approved
+    await _db.collection('users').doc(uid).set({
+      name, email, role:'admin', orgId,
+      status:'approved',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      approvedBy: 'system'
+    });
+
+    // Show success
+    document.getElementById('register-org-form-wrap').style.display='none';
+    document.getElementById('register-org-success-msg').textContent =
+      orgName+' created. Welcome, '+name+'!';
+    document.getElementById('register-org-success').style.display='';
+    // onAuthStateChanged fires automatically and logs them in
+
+  } catch(err) {
+    const friendly = {
+      'auth/email-already-in-use':'This email is already registered. Try signing in.',
+      'auth/invalid-email':'Please enter a valid email address.',
+      'auth/weak-password':'Password is too weak.'
+    };
+    errEl.textContent = friendly[err.code] || err.message;
+    errEl.style.display='block';
+  } finally { btn.textContent='Create Organisation →'; btn.disabled=false; }
 }
 
 function showApp() {
   document.getElementById('login-page').style.display='none';
   document.querySelector('.app').style.display='flex';
+  // Update org name in sidebar if available
+  if(_currentOrg) {
+    const logoSub = document.querySelector('.logo-sub');
+    if(logoSub) logoSub.textContent = _currentOrg.name || 'FE Management';
+  }
   applyRoleUI();
   startListeners();
   autoCheckDates();
@@ -4515,96 +4793,22 @@ function applyRoleUI() {
 async function doLogout() {
   if(_unsubFE)     { _unsubFE(); _unsubFE=null; }
   if(_unsubIssues) { _unsubIssues(); _unsubIssues=null; }
-  _currentUser=null; extinguishers=[]; issues=[];
+  _currentUser=null; _currentOrg=null; extinguishers=[]; issues=[];
   await _auth.signOut();
   document.querySelector('.app').style.display='none';
   document.getElementById('login-page').style.display='flex';
+  switchAuthTab('signin');
   document.getElementById('login-username').value='';
   document.getElementById('login-password').value='';
   document.getElementById('login-error').style.display='none';
 }
 
-function fillLogin(u,p) {
-  document.getElementById('login-username').value=u;
-  document.getElementById('login-password').value=p;
-  document.getElementById('login-error').style.display='none';
-}
-
-/* ── Auth tab switching ── */
-function switchAuthTab(tab) {
-  const isSignin = tab === 'signin';
-  document.getElementById('panel-signin').style.display = isSignin ? '' : 'none';
-  document.getElementById('panel-signup').style.display = isSignin ? 'none' : '';
-  document.getElementById('tab-signin').style.background = isSignin ? 'var(--bg2)' : 'transparent';
-  document.getElementById('tab-signin').style.color = isSignin ? 'var(--text)' : 'var(--text3)';
-  document.getElementById('tab-signin').style.boxShadow = isSignin ? '0 1px 4px rgba(0,0,0,0.3)' : 'none';
-  document.getElementById('tab-signup').style.background = !isSignin ? 'var(--bg2)' : 'transparent';
-  document.getElementById('tab-signup').style.color = !isSignin ? 'var(--text)' : 'var(--text3)';
-  document.getElementById('tab-signup').style.boxShadow = !isSignin ? '0 1px 4px rgba(0,0,0,0.3)' : 'none';
-}
-
-/* ── Check if first user (no admin exists yet) ── */
-async function isFirstUser() {
-  try {
-    const snap = await _db.collection('users').get();
-    return snap.empty;
-  } catch(e) { return false; }
-}
-
-/* ── Sign Up ── */
-async function doSignup() {
-  const name    = (document.getElementById('signup-name').value||'').trim();
-  const email   = (document.getElementById('signup-email').value||'').trim();
-  const pass    = document.getElementById('signup-password').value||'';
-  const confirm = document.getElementById('signup-confirm').value||'';
-  const role    = document.getElementById('signup-role').value;
-  const org     = (document.getElementById('signup-org').value||'').trim();
-  const errEl   = document.getElementById('signup-error');
-
-  errEl.style.display='none';
-  if(!name||!email||!pass){ errEl.textContent='Please fill all required fields.'; errEl.style.display='block'; return; }
-  if(pass.length<8){ errEl.textContent='Password must be at least 8 characters.'; errEl.style.display='block'; return; }
-  if(pass!==confirm){ errEl.textContent='Passwords do not match.'; errEl.style.display='block'; return; }
-
-  const btn=document.getElementById('signup-btn');
-  btn.textContent='Submitting…'; btn.disabled=true;
-
-  try {
-    const firstUser = await isFirstUser();
-
-    // Create Firebase Auth account
-    const cred = await _auth.createUserWithEmailAndPassword(email, pass);
-    const uid  = cred.user.uid;
-
-    if(firstUser) {
-      // First ever user → auto-approve as admin
-      await _db.collection('users').doc(uid).set({
-        name, email, role:'admin', org, status:'approved',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(), approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        approvedBy:'system'
-      });
-      // onAuthStateChanged will fire and log them in
-      toast('Welcome! You are the first admin.', 'success');
-    } else {
-      // Subsequent users → create profile as pending
-      await _db.collection('users').doc(uid).set({
-        name, email, role, org, status:'pending',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(), requestedRole: role
-      });
-      // Sign them out immediately — they need approval first
-      await _auth.signOut();
-      document.getElementById('signup-form-wrap').style.display='none';
-      document.getElementById('signup-pending-msg').textContent =
-        `Request submitted for ${email}. An admin will review your request.`;
-      document.getElementById('signup-pending').style.display='';
-      toast('Request submitted — awaiting admin approval');
-    }
-  } catch(err) {
-    let msg = err.message;
-    if(err.code==='auth/email-already-in-use') msg='This email is already registered. Try signing in.';
-    if(err.code==='auth/invalid-email') msg='Please enter a valid email address.';
-    errEl.textContent=msg; errEl.style.display='block';
-  } finally { btn.textContent='Submit Request →'; btn.disabled=false; }
+function togglePassVis(inputId, btnId) {
+  const inp=document.getElementById(inputId);
+  const eye=document.getElementById(btnId);
+  if(!inp) return;
+  inp.type=inp.type==='password'?'text':'password';
+  if(eye) eye.textContent=inp.type==='password'?'👁':'🙈';
 }
 
 /* ── Admin: load pending users ── */
@@ -4716,19 +4920,6 @@ async function changeUserRole(fsId, btn) {
     toast('Role updated to '+newRole);
     loadPendingUsers();
   } catch(err) { toast('Error: '+err.message,'error'); }
-}
-
-function togglePassVis(inputId, btnId) {
-  const inp=document.getElementById(inputId||'login-password');
-  const eye=document.getElementById(btnId||'pass-eye');
-  if(!inp) return;
-  inp.type=inp.type==='password'?'text':'password';
-  if(eye) eye.textContent=inp.type==='password'?'👁':'🙈';
-}
-  const inp=document.getElementById('login-password');
-  const eye=document.getElementById('pass-eye');
-  inp.type=inp.type==='password'?'text':'password';
-  eye.textContent=inp.type==='password'?'👁':'🙈';
 }
 
 /* ============================================================
