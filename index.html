@@ -4556,15 +4556,13 @@ function authInit() {
   // Test Firestore connectivity immediately
   _db.collection('_ping').limit(1).get()
     .then(() => {
-      loadOrgList();
+      // Firestore is working fine
     })
     .catch(err => {
       if(err.message && err.message.includes('Cloud Firestore API has not been used')) {
         showFirebaseAPIError();
-        return;
       }
-      // Other errors (permission denied on _ping is fine — means Firestore IS enabled)
-      loadOrgList();
+      // permission-denied on _ping is fine — means Firestore IS enabled, just no auth yet
     });
 
   _auth.onAuthStateChanged(async fbUser => {
@@ -4677,12 +4675,13 @@ function showFirebaseError(msg) {
 }
 
 async function loadOrgList() {
+  const sel = document.getElementById('signup-org-select');
+  if(!sel) return;
   try {
+    sel.innerHTML='<option value="">Loading…</option>';
     const snap = await _db.collection('organisations').orderBy('name').get();
-    const sel = document.getElementById('signup-org-select');
-    if(!sel) return;
     if(snap.empty) {
-      sel.innerHTML='<option value="">No organisations yet — register one first</option>';
+      sel.innerHTML='<option value="">No organisations yet — use New Org tab</option>';
       return;
     }
     sel.innerHTML='<option value="">Select your organisation…</option>';
@@ -4691,7 +4690,10 @@ async function loadOrgList() {
       o.value=d.id; o.textContent=d.data().name;
       sel.appendChild(o);
     });
-  } catch(e) { console.warn('loadOrgList error',e); }
+  } catch(e) {
+    sel.innerHTML='<option value="">Could not load — check Firestore rules</option>';
+    console.warn('loadOrgList error', e.message);
+  }
 }
 
 /* ── Tab switching (3 tabs) ── */
@@ -4706,7 +4708,8 @@ function switchAuthTab(tab) {
     btn.style.color      = active ? 'var(--text)' : 'var(--text3)';
     btn.style.boxShadow  = active ? '0 1px 4px rgba(0,0,0,0.3)' : 'none';
   });
-  if(tab==='signup') loadOrgList();
+  // Only load org list when signup tab is shown AND user is authenticated
+  if(tab==='signup' && _auth && _auth.currentUser) loadOrgList();
 }
 
 /* ── Sign In ── */
@@ -4845,19 +4848,17 @@ async function doRegisterOrg() {
   } catch(err) {
     console.error('Register org error:', err);
     errEl.style.color='var(--red)';
-    const friendly = {
-      'auth/email-already-in-use':'This email is already registered. Try signing in instead.',
-      'auth/invalid-email':'Please enter a valid email address.',
-      'auth/weak-password':'Password is too weak — use at least 8 characters.',
-      'auth/network-request-failed':'Network error — check your internet connection.',
-      'permission-denied':'Firestore rules are blocking this. Paste the new firestore.rules into Firebase Console → Firestore → Rules.'
-    };
-    errEl.textContent = friendly[err.code] || ('Error ('+err.code+'): '+err.message);
-    errEl.style.display='block';
-    // If auth was created but firestore failed, clean up
-    if(uid) {
-      try { await _auth.currentUser.delete(); } catch(e2) {}
+    if(err.code === 'auth/email-already-in-use') {
+      errEl.innerHTML = '⚠ This email already has an account. <span onclick="switchAuthTab(\'signin\')" style="color:var(--accent);cursor:pointer;text-decoration:underline;">Try signing in →</span><br><span style="color:var(--text3);font-size:11px;">If a previous registration failed, delete the account in Firebase Console → Authentication → Users, then try again.</span>';
+    } else if(err.code === 'permission-denied') {
+      errEl.innerHTML = '❌ Firestore is blocking this.<br><span style="color:var(--text3);font-size:11px;">Go to Firebase Console → Firestore → Rules → paste the rules file content → click Publish.</span>';
+    } else if(err.code === 'not-found') {
+      errEl.innerHTML = '❌ Firestore database not created yet.<br><span style="color:var(--text3);font-size:11px;">Go to <a href="https://console.firebase.google.com/project/fireguard-prod-3758c/firestore" target="_blank" style="color:var(--blue);">Firebase Console → Firestore</a> and click Create Database.</span>';
+    } else {
+      errEl.textContent = (err.code ? '['+err.code+'] ' : '') + err.message;
     }
+    errEl.style.display='block';
+    if(uid) { try { if(_auth.currentUser) await _auth.currentUser.delete(); } catch(e2) {} }
   } finally {
     btn.textContent='Create Organisation →'; btn.disabled=false;
   }
