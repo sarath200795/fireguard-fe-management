@@ -1829,19 +1829,30 @@ tbody tr.selected-row { background: rgba(255,85,51,0.06) !important; }
 
 <!-- Firebase load check — shows error if blocked by file:// -->
 <div id="app-load-error">
-  <div style="max-width:480px;text-align:center;padding:32px;">
+  <div style="max-width:500px;text-align:center;padding:32px;">
     <div style="font-size:48px;margin-bottom:16px;">⚠️</div>
     <div style="font-size:18px;font-weight:600;color:#e8eaf0;margin-bottom:12px;">Cannot open from file://</div>
     <div style="font-size:14px;color:#9099b0;line-height:1.8;margin-bottom:24px;">
-      Firebase is blocked when opening HTML files directly.<br>
-      You need to serve it over HTTP.
+      Firebase is blocked when opening HTML files directly from your computer.<br>
+      You must serve it over HTTP.
     </div>
-    <div style="background:#1e2130;border-radius:10px;padding:20px;text-align:left;font-size:13px;color:#9099b0;">
-      <div style="color:#e8eaf0;font-weight:600;margin-bottom:12px;">Quick fix — open Command Prompt and run:</div>
-      <div style="background:#0f1117;border-radius:6px;padding:12px;font-family:monospace;color:#22c97a;margin-bottom:8px;">cd Downloads</div>
-      <div style="background:#0f1117;border-radius:6px;padding:12px;font-family:monospace;color:#22c97a;margin-bottom:12px;">python -m http.server 8080</div>
-      <div style="color:#e8eaf0;font-weight:600;margin-bottom:8px;">Then open in browser:</div>
-      <div style="background:#0f1117;border-radius:6px;padding:12px;font-family:monospace;color:#4d9fff;">http://localhost:8080/index.html</div>
+    <div style="background:#1e2130;border-radius:10px;padding:20px;text-align:left;font-size:13px;color:#9099b0;margin-bottom:16px;">
+      <div style="color:#e8eaf0;font-weight:600;margin-bottom:12px;">Option 1 — Python (open Command Prompt):</div>
+      <div style="background:#0f1117;border-radius:6px;padding:10px 12px;font-family:monospace;color:#22c97a;margin-bottom:6px;">cd C:\Users\Sarath\Downloads</div>
+      <div style="background:#0f1117;border-radius:6px;padding:10px 12px;font-family:monospace;color:#22c97a;margin-bottom:12px;">python -m http.server 8080</div>
+      <div style="color:#e8eaf0;font-weight:600;margin-bottom:8px;">Then open browser and go to:</div>
+      <div style="background:#0f1117;border-radius:6px;padding:10px 12px;font-family:monospace;color:#4d9fff;margin-bottom:16px;">http://localhost:8080/index.html</div>
+      <div style="color:#e8eaf0;font-weight:600;margin-bottom:8px;">Option 2 — VS Code Live Server:</div>
+      <div style="color:#9099b0;font-size:12px;">Install the "Live Server" extension → right-click index.html → Open with Live Server</div>
+    </div>
+    <div style="background:#1e2130;border-radius:10px;padding:16px;text-align:left;font-size:12px;color:#9099b0;">
+      <div style="color:#f5a623;font-weight:600;margin-bottom:8px;">⚙ Also make sure Firebase is set up:</div>
+      <div style="line-height:2;">
+        1. Enable Firestore API: <a href="https://console.developers.google.com/apis/api/firestore.googleapis.com/overview?project=fireguard-prod-3758c" target="_blank" style="color:#4d9fff;">click here</a><br>
+        2. Firebase Console → Firestore → Create Database (if not done)<br>
+        3. Firebase Console → Authentication → Enable Email/Password<br>
+        4. Paste firestore.rules into Firestore → Rules → Publish
+      </div>
     </div>
   </div>
 </div>
@@ -1849,12 +1860,20 @@ tbody tr.selected-row { background: rgba(255,85,51,0.06) !important; }
 <script>
 // Check if Firebase loaded — if not, show the error screen
 window.addEventListener('DOMContentLoaded', function() {
+  // Check for file:// protocol first
+  if(window.location.protocol === 'file:') {
+    document.getElementById('app-load-error').style.display = 'flex';
+    document.getElementById('login-page').style.display = 'none';
+    return;
+  }
   if(typeof firebase === 'undefined') {
     document.getElementById('app-load-error').style.display = 'flex';
     document.getElementById('login-page').style.display = 'none';
   }
 });
 </script>
+
+<script>
 /* ============================================================
    FIREBASE CONFIG
    ============================================================ */
@@ -4528,63 +4547,133 @@ function authInit() {
   if(params.get('scan')) { spInit(); return; }
 
   try { initFirebase(_FIREBASE_CONFIG); } catch(e) {
-    document.body.innerHTML = '<div style="color:red;padding:40px;font-family:sans-serif;">Firebase init failed: '+e.message+'</div>';
-    return;
+    showFirebaseError('Firebase init failed: '+e.message); return;
   }
 
   document.querySelector('.app').style.display='none';
   document.getElementById('login-page').style.display='flex';
 
-  // Load org list for signup dropdown
-  loadOrgList();
+  // Test Firestore connectivity immediately
+  _db.collection('_ping').limit(1).get()
+    .then(() => {
+      loadOrgList();
+    })
+    .catch(err => {
+      if(err.message && err.message.includes('Cloud Firestore API has not been used')) {
+        showFirebaseAPIError();
+        return;
+      }
+      // Other errors (permission denied on _ping is fine — means Firestore IS enabled)
+      loadOrgList();
+    });
 
   _auth.onAuthStateChanged(async fbUser => {
     if(fbUser) {
       let profile = await fetchUserProfile(fbUser.uid);
-
       if(!profile) {
-        // No profile — sign out and show login
         await _auth.signOut();
         document.querySelector('.app').style.display='none';
         document.getElementById('login-page').style.display='flex';
         return;
       }
-
       if(profile.status === 'pending') {
         document.querySelector('.app').style.display='none';
         document.getElementById('login-page').style.display='flex';
         switchAuthTab('signup');
-        const fw = document.getElementById('signup-form-wrap');
-        const sp = document.getElementById('signup-pending');
-        const sb = document.getElementById('signup-blocked');
+        const fw=document.getElementById('signup-form-wrap');
+        const sp=document.getElementById('signup-pending');
+        const sb=document.getElementById('signup-blocked');
         if(fw) fw.style.display='none';
         if(sp) sp.style.display='none';
         if(sb) sb.style.display='';
         return;
       }
-
-      // Load org
-      if(profile.orgId) {
-        _currentOrg = await fetchOrg(profile.orgId);
-      }
-
+      if(profile.orgId) _currentOrg = await fetchOrg(profile.orgId);
       _currentUser = {
-        uid:   fbUser.uid,
-        email: fbUser.email,
-        name:  profile.name || fbUser.email,
-        role:  profile.role || 'viewer',
-        orgId: profile.orgId || null,
-        avatar:(profile.name||fbUser.email).substring(0,2).toUpperCase(),
+        uid: fbUser.uid, email: fbUser.email,
+        name: profile.name||fbUser.email, role: profile.role||'viewer',
+        orgId: profile.orgId||null,
+        avatar: (profile.name||fbUser.email).substring(0,2).toUpperCase(),
         color: ({admin:'var(--purple)',manager:'var(--amber)',vendor:'var(--blue)',viewer:'var(--green)'})[profile.role]||'var(--text3)'
       };
       showApp();
     } else {
-      _currentUser = null;
-      _currentOrg  = null;
+      _currentUser=null; _currentOrg=null;
       document.querySelector('.app').style.display='none';
       document.getElementById('login-page').style.display='flex';
     }
   });
+}
+
+function showFirebaseAPIError() {
+  document.getElementById('login-page').style.display='none';
+  document.getElementById('app-load-error').style.display='flex';
+  document.getElementById('app-load-error').innerHTML = `
+    <div style="max-width:500px;text-align:center;padding:32px;">
+      <div style="font-size:48px;margin-bottom:16px;">🔧</div>
+      <div style="font-size:18px;font-weight:600;color:#e8eaf0;margin-bottom:12px;">One-time Firebase Setup Required</div>
+      <div style="font-size:14px;color:#9099b0;line-height:1.8;margin-bottom:24px;">
+        The Firestore database needs to be enabled once in your Firebase project.<br>
+        This takes 2 minutes and only needs to be done once.
+      </div>
+      <div style="background:#1e2130;border-radius:12px;padding:20px;text-align:left;margin-bottom:16px;">
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">1</div>
+            <div>
+              <div style="color:#e8eaf0;font-weight:500;margin-bottom:4px;">Enable Firestore API</div>
+              <a href="https://console.developers.google.com/apis/api/firestore.googleapis.com/overview?project=fireguard-prod-3758c"
+                target="_blank"
+                style="display:inline-block;padding:8px 16px;background:var(--accent);color:white;border-radius:6px;text-decoration:none;font-size:13px;font-weight:500;margin-top:4px;">
+                → Open Google Cloud Console &amp; Click Enable
+              </a>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">2</div>
+            <div>
+              <div style="color:#e8eaf0;font-weight:500;margin-bottom:4px;">Create Firestore Database</div>
+              <a href="https://console.firebase.google.com/project/fireguard-prod-3758c/firestore"
+                target="_blank"
+                style="display:inline-block;padding:8px 16px;background:var(--blue);color:white;border-radius:6px;text-decoration:none;font-size:13px;font-weight:500;margin-top:4px;">
+                → Open Firebase → Click Create Database
+              </a>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">3</div>
+            <div>
+              <div style="color:#e8eaf0;font-weight:500;margin-bottom:4px;">Enable Email/Password Auth</div>
+              <a href="https://console.firebase.google.com/project/fireguard-prod-3758c/authentication/providers"
+                target="_blank"
+                style="display:inline-block;padding:8px 16px;background:var(--green);color:white;border-radius:6px;text-decoration:none;font-size:13px;font-weight:500;margin-top:4px;">
+                → Open Firebase Auth → Enable Email/Password
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button onclick="window.location.reload()"
+        style="padding:12px 28px;background:var(--accent);border:none;border-radius:8px;color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">
+        ↻ I've done it — Reload app
+      </button>
+      <div style="margin-top:12px;font-size:11px;color:var(--text3);">Wait 2 minutes after enabling before reloading</div>
+    </div>`;
+}
+
+function showFirebaseError(msg) {
+  document.getElementById('login-page').style.display='none';
+  document.getElementById('app-load-error').style.display='flex';
+  document.getElementById('app-load-error').innerHTML = `
+    <div style="max-width:460px;text-align:center;padding:32px;">
+      <div style="font-size:48px;margin-bottom:16px;">⚠️</div>
+      <div style="font-size:16px;font-weight:600;color:#e8eaf0;margin-bottom:12px;">Firebase Error</div>
+      <div style="font-size:13px;color:var(--red);background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.3);border-radius:8px;padding:12px;margin-bottom:20px;">${msg}</div>
+      <button onclick="window.location.reload()"
+        style="padding:11px 24px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;">
+        ↻ Reload
+      </button>
+    </div>`;
 }
 
 async function loadOrgList() {
@@ -4635,14 +4724,17 @@ async function doLogin() {
     await _auth.signInWithEmailAndPassword(email, pass);
     // onAuthStateChanged handles the rest
   } catch(err) {
+    console.error('Login error:', err.code, err.message);
     const friendly = {
       'auth/user-not-found':'No account found with this email.',
       'auth/wrong-password':'Incorrect password. Please try again.',
-      'auth/invalid-credential':'Incorrect email or password.',
+      'auth/invalid-credential':'Incorrect email or password. Please try again.',
       'auth/invalid-email':'Please enter a valid email address.',
-      'auth/too-many-requests':'Too many attempts. Please wait a moment.'
+      'auth/too-many-requests':'Too many attempts. Please wait a moment and try again.',
+      'auth/network-request-failed':'Network error — check your internet connection.',
+      'auth/user-disabled':'This account has been disabled.'
     };
-    errEl.textContent = friendly[err.code] || err.message;
+    errEl.textContent = friendly[err.code] || ('Login failed ('+err.code+'): '+err.message);
     errEl.style.display='block';
     document.getElementById('login-password').value='';
   } finally { btn.textContent='Sign In →'; btn.disabled=false; }
@@ -4716,12 +4808,15 @@ async function doRegisterOrg() {
   const btn=document.getElementById('register-org-btn');
   btn.textContent='Creating…'; btn.disabled=true;
 
+  let uid = null;
   try {
     // 1. Create Firebase Auth account
+    errEl.textContent='Step 1/3: Creating account…'; errEl.style.display='block'; errEl.style.color='var(--blue)';
     const cred = await _auth.createUserWithEmailAndPassword(email, pass);
-    const uid  = cred.user.uid;
+    uid = cred.user.uid;
 
     // 2. Create organisation document
+    errEl.textContent='Step 2/3: Creating organisation…';
     const orgRef = await _db.collection('organisations').add({
       name: orgName, type: orgType,
       sites: parseInt(orgSites)||0,
@@ -4731,6 +4826,7 @@ async function doRegisterOrg() {
     const orgId = orgRef.id;
 
     // 3. Create user profile as admin — auto-approved
+    errEl.textContent='Step 3/3: Setting up admin profile…';
     await _db.collection('users').doc(uid).set({
       name, email, role:'admin', orgId,
       status:'approved',
@@ -4739,22 +4835,32 @@ async function doRegisterOrg() {
       approvedBy: 'system'
     });
 
-    // Show success
+    errEl.style.display='none';
+    // Show success — onAuthStateChanged fires and logs them in
     document.getElementById('register-org-form-wrap').style.display='none';
     document.getElementById('register-org-success-msg').textContent =
-      orgName+' created. Welcome, '+name+'!';
+      orgName+' created. Welcome, '+name+'! Signing you in…';
     document.getElementById('register-org-success').style.display='';
-    // onAuthStateChanged fires automatically and logs them in
 
   } catch(err) {
+    console.error('Register org error:', err);
+    errEl.style.color='var(--red)';
     const friendly = {
-      'auth/email-already-in-use':'This email is already registered. Try signing in.',
+      'auth/email-already-in-use':'This email is already registered. Try signing in instead.',
       'auth/invalid-email':'Please enter a valid email address.',
-      'auth/weak-password':'Password is too weak.'
+      'auth/weak-password':'Password is too weak — use at least 8 characters.',
+      'auth/network-request-failed':'Network error — check your internet connection.',
+      'permission-denied':'Firestore rules are blocking this. Paste the new firestore.rules into Firebase Console → Firestore → Rules.'
     };
-    errEl.textContent = friendly[err.code] || err.message;
+    errEl.textContent = friendly[err.code] || ('Error ('+err.code+'): '+err.message);
     errEl.style.display='block';
-  } finally { btn.textContent='Create Organisation →'; btn.disabled=false; }
+    // If auth was created but firestore failed, clean up
+    if(uid) {
+      try { await _auth.currentUser.delete(); } catch(e2) {}
+    }
+  } finally {
+    btn.textContent='Create Organisation →'; btn.disabled=false;
+  }
 }
 
 function showApp() {
